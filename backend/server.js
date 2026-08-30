@@ -26,8 +26,34 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
+/*
+ * =========================================
+ * BODY PARSING
+ * =========================================
+ *
+ * Keep the raw body available for the
+ * Paystack webhook.
+ */
+
+app.use(
+  express.json({
+    limit: "10mb",
+    verify: (req, res, buf) => {
+      if (
+        req.originalUrl ===
+        "/api/premium/webhook"
+      ) {
+        req.rawBody = buf;
+      }
+    },
+  })
+);
+
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
 
 app.get("/", (req, res) => {
   res.json({
