@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#111111"
+    >
+
+    <title>
+        Blaiz Business Manager
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="./style.css"
+    >
+</head>
+
+<body>
+
+    <!-- =========================
+         LOADING SCREEN
+    ========================== -->
+
+    <div
+        id="loadingScreen"
+        class="loading-screen"
+    >
+
+        <img
+            src="./assets/blaiz-log.jpg"
+            alt="Blaiz Business Manager"
+            class="loading-logo"
+        >
+
+        <h2>
+            Blaiz Business Manager
+        </h2>
+
+        <div class="loader"></div>
+
+    </div>
+
+
+    <!-- =========================
+         AUTH CONTAINER
+    ========================== -->
+
+    <main
+        id="authContainer"
+        class="auth-container hidden"
+    >
+
+        <!-- LOGIN -->
+
+        <section
+            id="loginPage"
+            class="auth-page"
+        >
+
+            <div class="auth-card">
+
+                <img
+                    src="./assets/blaiz-log.jpg"
+                    alt="Blaiz"
+                    class="auth-logo"
+                >
+
+                <h1>
+                    Welcome back
+                </h1>
+
+                <p class="auth-subtitle">
+                    Sign in to your business
+                </p>
+
+
+                <form id="loginForm">
+
+                    <div class="input-group">
+
+               <label>
+    Email or Phone Number
+</label>
+
+<input
+    type="text"
+    id="loginIdentifier"
+    placeholder="Enter email or phone number"
+    required
+                        >
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>
+                            Password
+                        </label>
+
+                        <input
+                            type="password"
+                            id="loginPassword"
+                            placeholder="Enter your password"
+                            required
+                        >
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="primary-btn"
+                    >
+                        Login
+                    </button>
+
+                    <div class="forgot-password-link">
+    <button
+        type="button"
+        id="forgotPasswordButton"
+        class="text-btn"
+    >
+        Forgot Password?
+    </button>
+</div>
+                </form>
+
+
+                <p
+                    id="loginMessage"
+                    class="form-message"
+                ></p>
+
+
+                <div class="auth-switch">
+
+                    Don't have a store?
+
+                    <button
+                        id="showRegisterBtn"
+                        class="text-btn"
+                        type="button"
+                    >
+                        Create one
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- FORGOT PASSWORD -->
+
+        <section
+            id="forgotPasswordPage"
+            class="auth-page hidden"
+        >
+
+            <div class="auth-card">
+
+                <img
+                    src="./assets/blaiz-log.jpg"
+                    alt="Blaiz"
+                    class="auth-logo"
+                >
+
+                <h1>
+                    Reset Password
+                </h1>
+
+                <p class="auth-subtitle">
+                    Enter the email linked to your account
+                </p>
+
+
+                <form id="forgotPasswordForm">
+
+                    <div class="input-group">
+
+                        <label>
+                            Email Address
+                        </label>
+
+                        <input
+                            type="email"
+                            id="forgotPasswordEmail"
+                            placeholder="Enter your email"
+                            required
+                        >
+
+                    </div>
+
+
+                    <p
+                        id="forgotPasswordMessage"
+                        class="form-message"
+                    ></p>
+
+
+                    <button
+                        type="submit"
+                        id="sendResetOtpButton"
+                        class="primary-btn"
+                    >
+                        Send OTP
+                    </button>
+
+                </form>
+
+
+                <div class="auth-switch">
+
+                    Remember your password?
+
+                    <button
+                        id="backToLoginFromForgot"
+                        class="text-btn"
+                        type="button"
+                    >
+                        Back to Login
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+     VERIFY OTP
+========================= -->
+
+<section
+    id="verifyOtpPage"
+    class="auth-page hidden"
+>
+
+    <div class="auth-card">
+
+        <img
+            src="./assets/blaiz-log.jpg"
+            alt="Blaiz"
+            class="auth-logo"
+        >
+
+        <h1>
+            Verify OTP
+        </h1>
+
+        <p class="auth-subtitle">
+            Enter the 6-digit OTP sent to your email
+        </p>
+
+
+        <form id="verifyOtpForm">
+
+            <div class="input-group">
+
+                <label>
+                    OTP Code
+                </label>
+
+                <input
+                    type="text"
+                    id="resetOtp"
+                    placeholder="Enter 6-digit OTP"
+                    maxlength="6"
+                    inputmode="numeric"
+                    autocomplete="one-time-code"
+                    required
+                >
+
+            </div>
+
+
+            <p
+                id="verifyOtpMessage"
+                class="form-message"
+            ></p>
+
+
+            <button
+                type="submit"
+                id="verifyOtpButton"
+                class="primary-btn"
+            >
+                Verify OTP
+            </button>
+
+        </form>
+
+
+        <div class="auth-switch">
+
+            Didn't receive the code?
+
+            <button
+                type="button"
+                id="resendOtpButton"
+                class="text-btn"
+            >
+                Resend OTP
+            </button>
+
+        </div>
+
+
+        <div class="auth-switch">
+
+            <button
+                type="button"
+                id="backToForgotPassword"
+                class="text-btn"
+            >
+                Back
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     RESET PASSWORD
+========================= -->
+
+<section
+    id="resetPasswordPage"
+    class="auth-page hidden"
+>
+
+    <div class="auth-card">
+
+        <img
+            src="./assets/blaiz-log.jpg"
+            alt="Blaiz"
+            class="auth-logo"
+        >
+
+        <h1>
+            Create New Password
+        </h1>
+
+        <p class="auth-subtitle">
+            Enter a new password for your account
+        </p>
+
+
+        <form id="resetPasswordForm">
+
+            <div class="input-group">
+
+                <label>
+                    New Password
+                </label>
+
+                <input
+                    type="password"
+                    id="resetNewPassword"
+                    placeholder="Enter new password"
+                    minlength="6"
+                    required
+                >
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label>
+                    Confirm New Password
+                </label>
+
+                <input
+                    type="password"
+                    id="resetConfirmPassword"
+                    placeholder="Confirm new password"
+                    minlength="6"
+                    required
+                >
+
+            </div>
+
+
+            <p
+                id="resetPasswordMessage"
+                class="form-message"
+            ></p>
+
+
+            <button
+                type="submit"
+                id="resetPasswordButton"
+                class="primary-btn"
+            >
+                Reset Password
+            </button>
+
+        </form>
+
+
+        <div class="auth-switch">
+
+            Remember your password?
+
+            <button
+                type="button"
+                id="backToLoginFromReset"
+                class="text-btn"
+            >
+                Login
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+        <!-- REGISTER -->
+
+        <section
+            id="registerPage"
+            class="auth-page hidden"
+        >
+
+            <div class="auth-card">
+
+                <img
+                    src="./assets/blaiz-log.jpg"
+                    alt="Blaiz"
+                    class="auth-logo"
+                >
+
+                <h1>
+                    Create your store
+                </h1>
+
+                <p class="auth-subtitle">
+                    Start managing your business
+                </p>
+
+
+                <form id="registerForm">
+
+                    <div class="input-group">
+
+                        <label>
+                            Your Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="registerName"
+                            placeholder="Enter your name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>
+                            Store Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="registerStoreName"
+                            placeholder="Enter store name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>
+                            Email
+                        </label>
+
+                        <input
+                            type="email"
+                            id="registerEmail"
+                            placeholder="Enter your email"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>
+                            Phone Number
+                        </label>
+
+                        <input
+                            type="tel"
+                            id="registerPhone"
+                            placeholder="Enter phone number"
+                        >
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>
+                            Password
+                        </label>
+
+                        <input
+                            type="password"
+                            id="registerPassword"
+                            placeholder="Create a password"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>
+                            Confirm Password
+                        </label>
+
+                        <input
+                            type="password"
+                            id="registerConfirmPassword"
+                            placeholder="Confirm password"
+                            required
+                        >
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="primary-btn"
+                    >
+                        Create Store
+                    </button>
+
+                </form>
+
+
+                <p
+                    id="registerMessage"
+                    class="form-message"
+                ></p>
+
+
+                <div class="auth-switch">
+
+                    Already have a store?
+
+                    <button
+                        id="showLoginBtn"
+                        class="text-btn"
+                        type="button"
+                    >
+                        Login
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================
+         MAIN APPLICATION
+    ========================== -->
+
+    <div
+        id="appContainer"
+        class="app-container hidden"
+    >
+
+        <!-- SIDEBAR -->
+
+        <aside
+            id="sidebar"
+            class="sidebar"
+        >
+
+            <div class="sidebar-header">
+
+                <img
+                    src="./assets/blaiz-log.jpg"
+                    alt="Blaiz"
+                    class="sidebar-logo"
+                >
+
+                <div>
+
+                    <strong>
+                        Blaiz
+                    </strong>
+
+                    <span>
+                        Business Manager
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <nav class="sidebar-nav">
+
+                <button
+                    class="nav-item active"
+                    data-page="dashboard"
+                >
+                    🏠
+                    <span>
+                        Dashboard
+                    </span>
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-page="products"
+                >
+                    📦
+                    <span>
+                        Products
+                    </span>
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-page="customers"
+                >
+                    👥
+                    <span>
+                        Customers
+                    </span>
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-page="sales"
+                >
+                    💰
+                    <span>
+                        Sales
+                    </span>
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-page="receipts"
+                >
+                    🧾
+                    <span>
+                        Receipts
+                    </span>
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-page="workers"
+                >
+                    👷
+                    <span>
+                        Workers
+                    </span>
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-page="premium"
+                >
+                    ⭐
+                    <span>
+                        Premium
+                    </span>
+                </button>
+
+
+                <button
+                    class="nav-item"
+                    data-page="settings"
+                >
+                    ⚙️
+                    <span>
+                        Settings
+                    </span>
+                </button>
+
+            </nav>
+
+
+            <div class="sidebar-bottom">
+
+                <button
+                    id="logoutBtn"
+                    class="logout-btn"
+                >
+                    🚪
+                    <span>
+                        Logout
+                    </span>
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <!-- MAIN CONTENT -->
+
+        <main class="main-content">
+
+            <!-- TOP BAR -->
+
+            <header class="topbar">
+
+                <button
+                    id="menuBtn"
+                    class="menu-btn"
+                >
+                    ☰
+                </button>
+
+
+                <div class="topbar-store">
+
+                    <span
+                        id="topbarStoreName"
+                    >
+                        My Store
+                    </span>
+
+                </div>
+
+
+                <div class="topbar-user">
+
+                    <div class="user-avatar">
+                        U
+                    </div>
+
+                    <div>
+
+                        <strong
+                            id="topbarUserName"
+                        >
+                            User
+                        </strong>
+
+                        <span
+                            id="topbarUserRole"
+                        >
+                            Owner
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- =====================
+                 DASHBOARD
+            ====================== -->
+
+            <section
+                id="dashboardPage"
+                class="app-page active-page"
+            >
+
+                <div class="page-header">
+
+                    <div>
+
+                        <p
+                            id="dashboardGreeting"
+                            class="greeting"
+                        >
+                            Good morning
+                        </p>
+
+                        <h1>
+                            Dashboard
+                        </h1>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="dashboardContent"
+                    class="dashboard-content"
+                >
+
+                    <div class="stats-grid">
+
+                        <div class="stat-card">
+
+                            <span>
+                                Products
+                            </span>
+
+                            <strong
+                                id="productCount"
+                            >
+                                0
+                            </strong>
+
+                        </div>
+
+
+                        <div class="stat-card">
+
+                            <span>
+                                Customers
+                            </span>
+
+                            <strong
+                                id="customerCount"
+                            >
+                                0
+                            </strong>
+
+                        </div>
+
+
+                        <div class="stat-card">
+
+                            <span>
+                                Sales
+                            </span>
+
+                            <strong
+                                id="salesCount"
+                            >
+                                0
+                            </strong>
+
+                        </div>
+
+
+                        <div class="stat-card">
+
+                            <span>
+                                Revenue
+                            </span>
+
+                            <strong
+                                id="revenueAmount"
+                            >
+                                ₦0
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="dashboard-sections">
+
+                        <div class="dashboard-card">
+
+                            <div class="card-header">
+
+                                <h2>
+                                    Quick Actions
+                                </h2>
+
+                            </div>
+
+
+                            <div class="quick-actions">
+
+                                <button
+                                    data-page="products"
+                                    class="quick-action"
+                                >
+                                    📦
+                                    <span>
+                                        Add Product
+                                    </span>
+                                </button>
+
+
+                                <button
+                                    data-page="customers"
+                                    class="quick-action"
+                                >
+                                    👥
+                                    <span>
+                                        Add Customer
+                                    </span>
+                                </button>
+
+
+                                <button
+                                    data-page="sales"
+                                    class="quick-action"
+                                >
+                                    💰
+                                    <span>
+                                        Record Sale
+                                    </span>
+                                </button>
+
+
+                                <button
+                                    data-page="receipts"
+                                    class="quick-action"
+                                >
+                                    🧾
+                                    <span>
+                                        Verify Receipt
+                                    </span>
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="dashboard-card">
+
+                            <div class="card-header">
+
+                                <h2>
+                                    Recent Sales
+                                </h2>
+
+                            </div>
+
+                            <div
+                                id="recentSales"
+                                class="recent-sales"
+                            >
+
+                                <p class="empty-state">
+                                    No sales yet.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- PRODUCTS -->
+
+            <section
+                id="productsPage"
+                class="app-page"
+            >
+
+                <div class="page-header">
+
+                    <div>
+
+                        <h1>
+                            Products
+                        </h1>
+
+                        <p>
+                            Manage your inventory
+                        </p>
+
+                    </div>
+
+                    <button
+                        id="addProductBtn"
+                        class="primary-btn"
+                    >
+                        + Add Product
+                    </button>
+
+                </div>
+
+
+                <div class="toolbar">
+
+                    <input
+                        type="search"
+                        id="productSearch"
+                        placeholder="Search products..."
+                    >
+
+                </div>
+
+
+                <div
+                    id="productsList"
+                    class="data-list"
+                ></div>
+
+            </section>
+
+
+            <!-- CUSTOMERS -->
+
+            <section
+                id="customersPage"
+                class="app-page"
+            >
+
+                <div class="page-header">
+
+                    <div>
+
+                        <h1>
+                            Customers
+                        </h1>
+
+                        <p>
+                            Manage your customers
+                        </p>
+
+                    </div>
+
+                    <button
+                        id="addCustomerBtn"
+                        class="primary-btn"
+                    >
+                        + Add Customer
+                    </button>
+
+                </div>
+
+
+                <div class="toolbar">
+
+                    <input
+                        type="search"
+                        id="customerSearch"
+                        placeholder="Search customers..."
+                    >
+
+                </div>
+
+
+                <div
+                    id="customersList"
+                    class="data-list"
+                ></div>
+
+            </section>
+
+
+            <!-- SALES -->
+
+            <section
+                id="salesPage"
+                class="app-page"
+            >
+
+                <div class="page-header">
+
+                    <div>
+
+                        <h1>
+                            Sales
+                        </h1>
+
+                        <p>
+                            Record and manage sales
+                        </p>
+
+                    </div>
+
+                    <button
+                        id="newSaleBtn"
+                        class="primary-btn"
+                    >
+                        + Record Sale
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="salesList"
+                    class="data-list"
+                ></div>
+
+            </section>
+
+
+            <!-- RECEIPTS -->
+
+            <section
+                id="receiptsPage"
+                class="app-page"
+            >
+
+                <div class="page-header">
+
+                    <div>
+
+                        <h1>
+                            Receipts
+                        </h1>
+
+                        <p>
+                            Print and verify receipts
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="receipt-verification">
+
+                    <h2>
+                        Verify Receipt
+                    </h2>
+
+                    <p>
+                        Enter a receipt number to
+                        verify a transaction.
+                    </p>
+
+
+                    <div class="verify-form">
+
+                        <input
+                            type="text"
+                            id="verifyReceiptInput"
+                            placeholder="#000001"
+                        >
+
+                        <button
+                            id="verifyReceiptBtn"
+                            class="primary-btn"
+                        >
+                            Verify
+                        </button>
+
+                    </div>
+
+
+                    <div
+                        id="receiptVerificationResult"
+                        class="verification-result"
+                    ></div>
+
+                </div>
+
+
+                <div
+                    id="receiptList"
+                    class="data-list"
+                ></div>
+
+            </section>
+
+
+            <!-- WORKERS -->
+
+            <section
+                id="workersPage"
+                class="app-page"
+            >
+
+                <div class="page-header">
+
+                    <div>
+
+                        <h1>
+                            Workers
+                        </h1>
+
+                        <p>
+                            Manage your store workers
+                        </p>
+
+                    </div>
+
+                    <button
+                        id="addWorkerBtn"
+                        class="primary-btn"
+                    >
+                        + Add Worker
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="workersList"
+                    class="data-list"
+                ></div>
+
+            </section>
+
+
+            <!-- PREMIUM -->
+
+            <section
+                id="premiumPage"
+                class="app-page"
+            >
+
+                <div class="page-header">
+
+                    <div>
+
+                        <h1>
+                            Premium
+                        </h1>
+
+                        <p>
+                            Unlock unlimited business
+                            management
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="premiumContent"
+                    class="premium-content"
+                ></div>
+
+            </section>
+
+
+            <!-- SETTINGS -->
+
+            <section
+                id="settingsPage"
+                class="app-page"
+            >
+
+                <div class="page-header">
+
+                    <div>
+
+                        <h1>
+                            Settings
+                        </h1>
+
+                        <p>
+                            Manage your store
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="settingsContent"
+                    class="settings-content"
+                ></div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <!-- =========================
+         MODAL
+    ========================== -->
+
+    <div
+        id="modalContainer"
+        class="modal-container hidden"
+    >
+
+        <div
+            id="modalOverlay"
+            class="modal-overlay"
+        ></div>
+
+        <div
+            id="modalContent"
+            class="modal-content"
+        ></div>
+
+    </div>
+
+
+    <!-- =========================
+         NOTIFICATION
+    ========================== -->
+
+    <div
+        id="notification"
+        class="notification"
+    ></div>
+
+
+    <script
+        type="module"
+        src="./js/app.js"
+    ></script>
+
+</body>
+
+</html>

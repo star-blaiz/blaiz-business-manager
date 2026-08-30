@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Blaiz Business Manager</string>
+    <string name="title_activity_main">Blaiz Business Manager</string>
+    <string name="package_name">com.blaiz.businessmanager</string>
+    <string name="custom_url_scheme">com.blaiz.businessmanager</string>
+</resources>
