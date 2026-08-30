@@ -13,6 +13,9 @@ const customerRoutes = require("./routes/customerRoutes");
 const saleRoutes = require("./routes/saleRoutes");
 const receiptRoutes = require("./routes/receiptRoutes");
 const premiumRoutes = require("./routes/premiumRoutes");
+const {
+  paystackWebhook,
+} = require("./controllers/premiumController");
 const settingsRoutes = require("./routes/settingsRoutes");
 
 const app = express();
@@ -71,6 +74,10 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/sales", saleRoutes);
 app.use("/api/receipts", receiptRoutes);
 app.use("/api/premium", premiumRoutes);
+app.post(
+  "/api/premium/webhook",
+  paystackWebhook
+);
 app.use("/api/settings", settingsRoutes);
 
 const startServer = async () => {
