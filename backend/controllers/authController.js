@@ -354,9 +354,8 @@ const registerOwner = async (req, res) => {
 
     /* -----------------------------------------
        DUPLICATE KEY ERROR
-    ----------------------------------------- */
 
-    if (error.code === 11000) {
+       if (error.code === 11000) {
 
       return res.status(409).json({
 
@@ -368,6 +367,27 @@ const registerOwner = async (req, res) => {
 
     }
 
+    ----------------------------------------- */
+
+    if (error.code === 11000) {
+
+  console.error("DUPLICATE KEY DETAILS:", {
+    keyPattern: error.keyPattern,
+    keyValue: error.keyValue,
+    message: error.message,
+  });
+
+  return res.status(409).json({
+
+    success: false,
+
+    message: "Duplicate data detected.",
+
+    duplicateField: error.keyPattern,
+    duplicateValue: error.keyValue,
+  });
+
+}
 
     return res.status(500).json({
 

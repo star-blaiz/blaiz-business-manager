@@ -11,20 +11,18 @@ const protect = require("../middleware/authMiddleware");
 const router = express.Router();
 
 /*
- * Public route.
- *
- * Customers do NOT need an account
- * to verify a receipt.
+ * Only authenticated store users can verify receipts.
+ * Customers cannot access receipt verification.
  */
-
 router.post(
   "/verify",
+  protect,
   verifyReceipt
 );
 
 /*
- * Store users can retrieve their
- * own store's receipt.
+ * Store users can retrieve receipts
+ * belonging to their own store.
  */
 router.get(
   "/",

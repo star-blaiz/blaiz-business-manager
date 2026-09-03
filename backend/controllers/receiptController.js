@@ -31,9 +31,28 @@ const verifyReceipt = async (req, res) => {
       receiptNumber = `#${receiptNumber}`;
     }
 
-    const receipt = await Receipt.findOne({
-      receiptNumber,
-    }).lean();
+console.log("VERIFY REQUEST:", {
+  userId: req.user._id?.toString(),
+  email: req.user.email,
+  storeId: req.user.storeId?.toString(),
+  receiptNumber
+});
+
+const receipt = await Receipt.findOne({
+  receiptNumber,
+  storeId: req.user.storeId,
+}).lean();
+
+console.log(
+  "RECEIPT FOUND:",
+  receipt
+    ? {
+        receiptId: receipt._id.toString(),
+        receiptStoreId: receipt.storeId.toString(),
+        receiptNumber: receipt.receiptNumber
+      }
+    : null
+);
 
     if (!receipt) {
       return res.status(404).json({

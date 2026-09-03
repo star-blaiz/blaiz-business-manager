@@ -19,7 +19,6 @@ const receiptSchema = new mongoose.Schema(
     receiptNumber: {
     type: String,
     required: true,
-    unique: true,
     index: true,
     },
 
