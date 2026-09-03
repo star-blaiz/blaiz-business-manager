@@ -1163,6 +1163,54 @@ const backToForgotPassword =
     );
 
 
+/* =========================
+   BACK FROM OTP TO EMAIL
+========================= */
+
+if (backToForgotPassword) {
+
+    backToForgotPassword.addEventListener(
+        "click",
+        () => {
+
+            /* Hide OTP page */
+            verifyOtpPage.classList.add(
+                "hidden"
+            );
+
+            /* Show forgot password page */
+            forgotPasswordPage.classList.remove(
+                "hidden"
+            );
+
+            /* Clear OTP field */
+            const otpInput =
+                document.getElementById(
+                    "resetOtp"
+                );
+
+            if (otpInput) {
+                otpInput.value = "";
+            }
+
+            /* Clear OTP message */
+            const message =
+                document.getElementById(
+                    "verifyOtpMessage"
+                );
+
+            if (message) {
+                message.textContent = "";
+                message.classList.remove(
+                    "success-message"
+                );
+            }
+        }
+    );
+
+}
+
+
 if (verifyOtpForm) {
 
     verifyOtpForm.addEventListener(
@@ -1301,6 +1349,221 @@ resetPasswordPage.classList.remove(
         }
     );
 
+}
+
+/* =========================
+   RESET PASSWORD
+========================= */
+
+const resetPasswordForm =
+    document.getElementById(
+        "resetPasswordForm"
+    );
+
+if (resetPasswordForm) {
+
+    resetPasswordForm.addEventListener(
+        "submit",
+        async (event) => {
+
+            event.preventDefault();
+
+            const emailInput =
+                document.getElementById(
+                    "forgotPasswordEmail"
+                );
+
+            const newPasswordInput =
+                document.getElementById(
+                    "resetNewPassword"
+                );
+
+            const confirmPasswordInput =
+                document.getElementById(
+                    "resetConfirmPassword"
+                );
+
+            const message =
+                document.getElementById(
+                    "resetPasswordMessage"
+                );
+
+            const button =
+                document.getElementById(
+                    "resetPasswordButton"
+                );
+
+            const email =
+                emailInput
+                    ? emailInput.value.trim()
+                    : "";
+
+            const newPassword =
+                newPasswordInput
+                    ? newPasswordInput.value
+                    : "";
+
+            const confirmPassword =
+                confirmPasswordInput
+                    ? confirmPasswordInput.value
+                    : "";
+
+
+            /* =========================
+               VALIDATION
+            ========================= */
+
+            message.textContent = "";
+            message.classList.remove(
+                "success-message"
+            );
+
+            if (!email) {
+
+                message.textContent =
+                    "Email address is missing.";
+
+                return;
+            }
+
+            if (!newPassword) {
+
+                message.textContent =
+                    "Please enter your new password.";
+
+                return;
+            }
+
+            if (newPassword.length < 6) {
+
+                message.textContent =
+                    "New password must contain at least 6 characters.";
+
+                return;
+            }
+
+            if (
+                newPassword !==
+                confirmPassword
+            ) {
+
+                message.textContent =
+                    "Passwords do not match.";
+
+                return;
+            }
+
+
+            /* =========================
+               DISABLE BUTTON
+            ========================= */
+
+            button.disabled = true;
+
+            button.textContent =
+                "Resetting...";
+
+
+            try {
+
+                /* =========================
+                   SEND NEW PASSWORD
+                   TO BACKEND
+                ========================= */
+
+                const result =
+                    await apiRequest(
+                        "/auth/reset-password",
+                        {
+                            method: "POST",
+
+                            body:
+                                JSON.stringify({
+                                    email:
+                                        email,
+
+                                    newPassword:
+                                        newPassword
+                                })
+                        }
+                    );
+
+
+                /* =========================
+                   SUCCESS
+                ========================= */
+
+                message.textContent =
+                    result.message ||
+                    "Password reset successfully.";
+
+                message.classList.add(
+                    "success-message"
+                );
+
+
+                /* Clear password fields */
+
+                newPasswordInput.value = "";
+
+                confirmPasswordInput.value = "";
+
+
+                /* Remove old reset token
+                   if one exists */
+
+                sessionStorage.removeItem(
+                    "passwordResetToken"
+                );
+
+
+                /* =========================
+                   RETURN TO LOGIN
+                ========================= */
+
+                setTimeout(
+                    () => {
+
+                        resetPasswordPage.classList.add(
+                            "hidden"
+                        );
+
+                        loginPage.classList.remove(
+                            "hidden"
+                        );
+
+                        message.textContent = "";
+
+                    },
+                    1500
+                );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Reset password error:",
+                    error
+                );
+
+                message.textContent =
+                    error.message ||
+                    "Unable to reset password. Please try again.";
+
+                message.classList.remove(
+                    "success-message"
+                );
+
+            } finally {
+
+                button.disabled = false;
+
+                button.textContent =
+                    "Reset Password";
+            }
+
+        }
+    );
 }
 
 /* =========================
