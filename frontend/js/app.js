@@ -6813,450 +6813,541 @@ async function printReceipt(receiptNumber) {
                 .join("");
 
 
-        const printWindow =
-            window.open(
-                "",
-                "_blank",
-                "width=800,height=900"
-            );
+        /* =========================
+           SAVE CURRENT PAGE
+        ========================= */
+
+        const originalBody =
+            document.body.innerHTML;
+
+        const originalTitle =
+            document.title;
 
 
-        if (!printWindow) {
+        /* =========================
+           CREATE PRINT CONTENT
+        ========================= */
 
-            showNotification(
-                "Please allow pop-ups to print the receipt."
-            );
+        document.body.innerHTML = `
 
-            return;
+            <div class="blaiz-print-receipt">
 
-        }
+                <div class="header">
 
+                    <h1>
+                        ${escapeHtml(
+                            receipt.store?.name ||
+                            "Store"
+                        )}
+                    </h1>
 
-        printWindow.document.write(`
-
-            <!DOCTYPE html>
-
-            <html>
-
-            <head>
-
-                <meta charset="UTF-8">
-
-                <title>
-                    Receipt ${escapeHtml(
-                        receipt.receiptNumber ||
-                        ""
-                    )}
-                </title>
-
-
-                <style>
-
-                    * {
-                        box-sizing: border-box;
+                    ${
+                        receipt.store?.phone
+                            ? `
+                                <p>
+                                    ${escapeHtml(
+                                        receipt.store.phone
+                                    )}
+                                </p>
+                            `
+                            : ""
                     }
 
-                    body {
-                        font-family: Arial, sans-serif;
-                        margin: 0;
-                        padding: 30px;
-                        color: #111;
-                        background: #fff;
+                    ${
+                        receipt.store?.email
+                            ? `
+                                <p>
+                                    ${escapeHtml(
+                                        receipt.store.email
+                                    )}
+                                </p>
+                            `
+                            : ""
                     }
 
-                    .receipt {
-                        max-width: 700px;
-                        margin: auto;
+                    ${
+                        receipt.store?.address
+                            ? `
+                                <p>
+                                    ${escapeHtml(
+                                        receipt.store.address
+                                    )}
+                                </p>
+                            `
+                            : ""
                     }
-
-                    .header {
-                        text-align: center;
-                        margin-bottom: 20px;
-                    }
-
-                    .header h1 {
-                        margin: 0 0 8px;
-                        font-size: 26px;
-                    }
-
-                    .header p {
-                        margin: 4px 0;
-                        font-size: 14px;
-                    }
-
-                    .receipt-title {
-                        text-align: center;
-                        margin: 20px 0;
-                        font-size: 20px;
-                        font-weight: bold;
-                    }
-
-                    .info {
-                        margin-bottom: 20px;
-                    }
-
-                    .info p {
-                        margin: 6px 0;
-                    }
-
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-top: 15px;
-                    }
-
-                    th,
-                    td {
-                        border-bottom: 1px solid #ddd;
-                        padding: 10px 6px;
-                        text-align: left;
-                    }
-
-                    th {
-                        font-weight: bold;
-                    }
-
-                    td:nth-child(2),
-                    td:nth-child(3),
-                    td:nth-child(4),
-                    th:nth-child(2),
-                    th:nth-child(3),
-                    th:nth-child(4) {
-                        text-align: right;
-                    }
-
-                    .summary {
-                        margin-top: 20px;
-                        border-top: 2px solid #111;
-                        padding-top: 12px;
-                    }
-
-                    .summary-row {
-                        display: flex;
-                        justify-content: space-between;
-                        padding: 5px 0;
-                    }
-
-                    .summary-row.total {
-                        font-size: 18px;
-                        font-weight: bold;
-                        margin-top: 8px;
-                    }
-
-                    .footer {
-                        text-align: center;
-                        margin-top: 35px;
-                        border-top: 1px solid #ddd;
-                        padding-top: 15px;
-                        font-size: 13px;
-                    }
-
-                    @media print {
-
-                        body {
-                            padding: 10px;
-                        }
-
-                        .receipt {
-                            max-width: none;
-                        }
-
-                    }
-
-                </style>
-
-            </head>
-
-
-            <body>
-
-                <div class="receipt">
-
-
-                    <div class="header">
-
-                        <h1>
-                            ${escapeHtml(
-                                receipt.store?.name ||
-                                "Store"
-                            )}
-                        </h1>
-
-                        ${
-                            receipt.store?.phone
-                                ? `
-                                    <p>
-                                        ${escapeHtml(
-                                            receipt.store.phone
-                                        )}
-                                    </p>
-                                `
-                                : ""
-                        }
-
-                        ${
-                            receipt.store?.email
-                                ? `
-                                    <p>
-                                        ${escapeHtml(
-                                            receipt.store.email
-                                        )}
-                                    </p>
-                                `
-                                : ""
-                        }
-
-                        ${
-                            receipt.store?.address
-                                ? `
-                                    <p>
-                                        ${escapeHtml(
-                                            receipt.store.address
-                                        )}
-                                    </p>
-                                `
-                                : ""
-                        }
-
-                    </div>
-
-
-                    <div class="receipt-title">
-                        SALES RECEIPT
-                    </div>
-
-
-                    <div class="info">
-
-                        <p>
-                            <strong>
-                                Receipt:
-                            </strong>
-
-                            ${escapeHtml(
-                                receipt.receiptNumber ||
-                                "Not available"
-                            )}
-                        </p>
-
-
-                        <p>
-                            <strong>
-                                Date:
-                            </strong>
-
-                            ${escapeHtml(date)}
-                        </p>
-
-
-                        <p>
-                            <strong>
-                                Customer:
-                            </strong>
-
-                            ${escapeHtml(
-                                receipt.customer?.name ||
-                                "Walk-in Customer"
-                            )}
-                        </p>
-
-
-                        ${
-                            receipt.soldBy
-                                ? `
-                                    <p>
-                                        <strong>
-                                            Sold By:
-                                        </strong>
-
-                                        ${escapeHtml(
-                                            receipt.soldBy.name ||
-                                            "Unknown"
-                                        )}
-                                    </p>
-                                `
-                                : ""
-                        }
-
-                    </div>
-
-
-                    <table>
-
-                        <thead>
-
-                            <tr>
-
-                                <th>
-                                    Product
-                                </th>
-
-                                <th>
-                                    Qty
-                                </th>
-
-                                <th>
-                                    Price
-                                </th>
-
-                                <th>
-                                    Total
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody>
-
-                            ${itemsHtml}
-
-                        </tbody>
-
-                    </table>
-
-
-                    <div class="summary">
-
-                        <div class="summary-row">
-
-                            <span>
-                                Subtotal
-                            </span>
-
-                            <strong>
-                                ${formatCurrency(
-                                    Number(
-                                        receipt.subtotal || 0
-                                    )
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="summary-row">
-
-                            <span>
-                                Discount
-                            </span>
-
-                            <strong>
-                                ${formatCurrency(
-                                    Number(
-                                        receipt.discount || 0
-                                    )
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="summary-row total">
-
-                            <span>
-                                TOTAL
-                            </span>
-
-                            <strong>
-                                ${formatCurrency(
-                                    Number(
-                                        receipt.totalAmount || 0
-                                    )
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="summary-row">
-
-                            <span>
-                                Amount Paid
-                            </span>
-
-                            <strong>
-                                ${formatCurrency(
-                                    Number(
-                                        receipt.amountPaid || 0
-                                    )
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="summary-row">
-
-                            <span>
-                                Outstanding Debt
-                            </span>
-
-                            <strong>
-                                ${formatCurrency(
-                                    Number(
-                                        receipt.debt || 0
-                                    )
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="summary-row">
-
-                            <span>
-                                Payment Method
-                            </span>
-
-                            <strong>
-                                ${escapeHtml(
-                                    formatPaymentMethod(
-                                        receipt.paymentMethod
-                                    )
-                                )}
-                            </strong>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="footer">
-
-                        <p>
-                            Thank you for your patronage!
-                        </p>
-
-                        <p>
-                            Powered by Blaiz Business Manager
-                        </p>
-
-                    </div>
-
 
                 </div>
 
 
-                <script>
-
-                    window.onload = function() {
-
-                        window.print();
-
-                    };
-
-                <\/script>
-
-            </body>
-
-            </html>
-
-        `);
+                <div class="receipt-title">
+                    SALES RECEIPT
+                </div>
 
 
-        printWindow.document.close();
+                <div class="info">
+
+                    <p>
+                        <strong>
+                            Receipt:
+                        </strong>
+
+                        ${escapeHtml(
+                            receipt.receiptNumber ||
+                            "Not available"
+                        )}
+                    </p>
+
+
+                    <p>
+                        <strong>
+                            Date:
+                        </strong>
+
+                        ${escapeHtml(date)}
+                    </p>
+
+
+                    <p>
+                        <strong>
+                            Customer:
+                        </strong>
+
+                        ${escapeHtml(
+                            receipt.customer?.name ||
+                            "Walk-in Customer"
+                        )}
+                    </p>
+
+
+                    ${
+                        receipt.soldBy
+                            ? `
+                                <p>
+                                    <strong>
+                                        Sold By:
+                                    </strong>
+
+                                    ${escapeHtml(
+                                        receipt.soldBy.name ||
+                                        "Unknown"
+                                    )}
+                                </p>
+                            `
+                            : ""
+                    }
+
+                </div>
+
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Product
+                            </th>
+
+                            <th>
+                                Qty
+                            </th>
+
+                            <th>
+                                Price
+                            </th>
+
+                            <th>
+                                Total
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        ${itemsHtml}
+
+                    </tbody>
+
+                </table>
+
+
+                <div class="summary">
+
+                    <div class="summary-row">
+
+                        <span>
+                            Subtotal
+                        </span>
+
+                        <strong>
+                            ${formatCurrency(
+                                Number(
+                                    receipt.subtotal || 0
+                                )
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Discount
+                        </span>
+
+                        <strong>
+                            ${formatCurrency(
+                                Number(
+                                    receipt.discount || 0
+                                )
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row total">
+
+                        <span>
+                            TOTAL
+                        </span>
+
+                        <strong>
+                            ${formatCurrency(
+                                Number(
+                                    receipt.totalAmount || 0
+                                )
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Amount Paid
+                        </span>
+
+                        <strong>
+                            ${formatCurrency(
+                                Number(
+                                    receipt.amountPaid || 0
+                                )
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Outstanding Debt
+                        </span>
+
+                        <strong>
+                            ${formatCurrency(
+                                Number(
+                                    receipt.debt || 0
+                                )
+                            )}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Payment Method
+                        </span>
+
+                        <strong>
+                            ${escapeHtml(
+                                formatPaymentMethod(
+                                    receipt.paymentMethod
+                                )
+                            )}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="footer">
+
+                    <p>
+                        Thank you for your patronage!
+                    </p>
+
+                    <p>
+                        Powered by Blaiz Business Manager
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <style>
+
+                * {
+                    box-sizing: border-box;
+                }
+
+
+                body {
+                    font-family:
+                        Arial,
+                        sans-serif;
+
+                    margin: 0;
+
+                    padding: 30px;
+
+                    color: #111;
+
+                    background: #fff;
+                }
+
+
+                .blaiz-print-receipt {
+
+                    max-width: 700px;
+
+                    margin: auto;
+                }
+
+
+                .header {
+
+                    text-align: center;
+
+                    margin-bottom: 20px;
+                }
+
+
+                .header h1 {
+
+                    margin:
+                        0 0 8px;
+
+                    font-size: 26px;
+                }
+
+
+                .header p {
+
+                    margin: 4px 0;
+
+                    font-size: 14px;
+                }
+
+
+                .receipt-title {
+
+                    text-align: center;
+
+                    margin: 20px 0;
+
+                    font-size: 20px;
+
+                    font-weight: bold;
+                }
+
+
+                .info {
+
+                    margin-bottom: 20px;
+                }
+
+
+                .info p {
+
+                    margin: 6px 0;
+                }
+
+
+                table {
+
+                    width: 100%;
+
+                    border-collapse:
+                        collapse;
+
+                    margin-top: 15px;
+                }
+
+
+                th,
+                td {
+
+                    border-bottom:
+                        1px solid #ddd;
+
+                    padding:
+                        10px 6px;
+
+                    text-align: left;
+                }
+
+
+                th {
+
+                    font-weight: bold;
+                }
+
+
+                td:nth-child(2),
+                td:nth-child(3),
+                td:nth-child(4),
+                th:nth-child(2),
+                th:nth-child(3),
+                th:nth-child(4) {
+
+                    text-align: right;
+                }
+
+
+                .summary {
+
+                    margin-top: 20px;
+
+                    border-top:
+                        2px solid #111;
+
+                    padding-top: 12px;
+                }
+
+
+                .summary-row {
+
+                    display: flex;
+
+                    justify-content:
+                        space-between;
+
+                    padding: 5px 0;
+                }
+
+
+                .summary-row.total {
+
+                    font-size: 18px;
+
+                    font-weight: bold;
+
+                    margin-top: 8px;
+                }
+
+
+                .footer {
+
+                    text-align: center;
+
+                    margin-top: 35px;
+
+                    border-top:
+                        1px solid #ddd;
+
+                    padding-top: 15px;
+
+                    font-size: 13px;
+                }
+
+
+                @media print {
+
+                    body {
+
+                        padding: 10px;
+                    }
+
+
+                    .blaiz-print-receipt {
+
+                        max-width: none;
+                    }
+
+                }
+
+            </style>
+        `;
+
+
+        document.title =
+            `Receipt ${
+                receipt.receiptNumber || ""
+            }`;
+
+
+        /* =========================
+           PRINT
+        ========================= */
+
+        setTimeout(
+            () => {
+
+                window.print();
+
+            },
+            300
+        );
+
+
+        /* =========================
+           RESTORE APP AFTER PRINT
+        ========================= */
+
+        const restoreApp =
+            () => {
+
+                document.body.innerHTML =
+                    originalBody;
+
+                document.title =
+                    originalTitle;
+
+                window.removeEventListener(
+                    "afterprint",
+                    restoreApp
+                );
+
+            };
+
+
+        window.addEventListener(
+            "afterprint",
+            restoreApp
+        );
+
+
+        /* Fallback for Android/WebView */
+
+        setTimeout(
+            () => {
+
+                if (
+                    document.querySelector(
+                        ".blaiz-print-receipt"
+                    )
+                ) {
+
+                    restoreApp();
+
+                }
+
+            },
+            3000
+        );
 
 
     } catch (error) {
@@ -7274,7 +7365,6 @@ async function printReceipt(receiptNumber) {
     }
 
 }
-
 /* =========================
    VERIFY RECEIPT BUTTON
 ========================= */
