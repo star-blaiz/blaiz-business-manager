@@ -1,6 +1,7 @@
 const API_URL =
     localStorage.getItem("blaiz_api_url") ||
     "https://blaiz-business-manager-gq8b.onrender.com/api";
+    console.log("BLAIZ API URL:", API_URL);
 
 async function apiRequest(
     endpoint,
