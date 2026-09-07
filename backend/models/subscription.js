@@ -9,11 +9,12 @@ const subscriptionSchema = new mongoose.Schema(
       index: true,
     },
 
-    plan: {
-      type: String,
-      enum: ["premium"],
-      required: true,
-    },
+   plan: {
+  type: String,
+  enum: ["premium", "monthly", "six-month", "annual"],
+  required: true,
+  default: "premium",
+},
 
     amount: {
       type: Number,

@@ -49,31 +49,19 @@ const getPaystackHeaders = () => {
    CALCULATE PREMIUM EXPIRY
 ========================================= */
 
-const calculatePremiumDates = (
-  existingExpiry = null
-) => {
+const calculatePremiumDates = () => {
 
-  const now = new Date();
-
-  let startDate = now;
-
-  if (
-    existingExpiry &&
-    new Date(existingExpiry) > now
-  ) {
-
-    startDate =
-      new Date(existingExpiry);
-
-  }
+  const startDate = new Date();
 
   const expiryDate =
-    new Date(startDate);
-
-  expiryDate.setDate(
-    expiryDate.getDate() +
-      PREMIUM_DURATION_DAYS
-  );
+    new Date(
+      startDate.getTime() +
+      PREMIUM_DURATION_DAYS *
+        24 *
+        60 *
+        60 *
+        1000
+    );
 
   return {
     startDate,
@@ -81,7 +69,6 @@ const calculatePremiumDates = (
   };
 
 };
-
 
 /* =========================================
    ACTIVATE PREMIUM
@@ -113,20 +100,18 @@ const activatePremium = async ({
   }
 
 
-  /*
-   * Calculate subscription dates.
-   *
-   * If Premium is still active,
-   * extend from the existing expiry.
-   */
+ /*
+ * Calculate subscription dates.
+ *
+ * Every new subscription starts
+ * from the date the payment is processed.
+ */
 
   const {
-    startDate,
-    expiryDate,
-  } =
-    calculatePremiumDates(
-      store.subscriptionExpiry
-    );
+  startDate,
+  expiryDate,
+} =
+  calculatePremiumDates();
 
 
   /*
@@ -210,6 +195,7 @@ const activatePremiumPlan = async ({
   paymentId,
   amount,
   durationDays,
+  plan,
 }) => {
 
   /*
@@ -232,34 +218,23 @@ const activatePremiumPlan = async ({
   }
 
 
-  /*
-   * Calculate subscription dates.
-   *
-   * If Premium is still active,
-   * extend from the existing expiry.
-   */
+ /*
+ * Calculate subscription dates.
+ *
+ * Every new subscription starts
+ * from the date the payment is processed.
+ */
 
-  const now = new Date();
+  const startDate = new Date();
 
-  let startDate = now;
-
-  if (
-    store.subscriptionExpiry &&
-    new Date(store.subscriptionExpiry) > now
-  ) {
-
-    startDate =
-      new Date(store.subscriptionExpiry);
-
-  }
-
-
-  const expiryDate =
-    new Date(startDate);
-
-  expiryDate.setDate(
-    expiryDate.getDate() +
-      durationDays
+const expiryDate =
+  new Date(
+    startDate.getTime() +
+    durationDays *
+      24 *
+      60 *
+      60 *
+      1000
   );
 
 
@@ -274,7 +249,7 @@ const activatePremiumPlan = async ({
         store._id,
 
       plan:
-        "premium",
+  plan,
 
       amount,
 
@@ -1558,6 +1533,9 @@ const verifySixMonthPremiumPayment =
           durationDays:
             SIX_MONTH_PREMIUM_DURATION_DAYS,
 
+            plan:
+  "six-month",
+
         });
 
 
@@ -1920,6 +1898,9 @@ const verifyMonthlyPremiumPayment =
           durationDays:
             MONTHLY_PREMIUM_DURATION_DAYS,
 
+             plan:
+    "monthly",
+
         });
 
 
@@ -2104,24 +2085,101 @@ const paystackWebhook =
 
 
       /*
-       * Verify amount.
-       */
+ * Determine Premium plan from
+ * the Paystack payment amount.
+ */
 
-      if (
-        Number(paystackData.amount) !==
-        PREMIUM_AMOUNT_KOBO
-      ) {
+const paymentAmount =
+  Number(paystackData.amount);
 
-        return res.status(200).json({
 
-          success: true,
+let premiumAmount = null;
+let premiumDurationDays = null;
+let premiumPlan = null;
 
-          message:
-            "Payment amount does not match Premium price.",
 
-        });
+/*
+ * Monthly Premium
+ * ₦5,000 = 500,000 kobo
+ */
 
-      }
+if (
+  paymentAmount ===
+  MONTHLY_PREMIUM_AMOUNT_KOBO
+) {
+
+  premiumAmount =
+    MONTHLY_PREMIUM_PRICE;
+
+  premiumDurationDays =
+    MONTHLY_PREMIUM_DURATION_DAYS;
+
+  premiumPlan =
+    "monthly";
+
+}
+
+
+/*
+ * Six-month Premium
+ * ₦15,000 = 1,500,000 kobo
+ */
+
+else if (
+  paymentAmount ===
+  SIX_MONTH_PREMIUM_AMOUNT_KOBO
+) {
+
+  premiumAmount =
+    SIX_MONTH_PREMIUM_PRICE;
+
+  premiumDurationDays =
+    SIX_MONTH_PREMIUM_DURATION_DAYS;
+
+  premiumPlan =
+    "six-month";
+
+}
+
+
+/*
+ * Annual Premium
+ * ₦30,000 = 3,000,000 kobo
+ */
+
+else if (
+  paymentAmount ===
+  PREMIUM_AMOUNT_KOBO
+) {
+
+  premiumAmount =
+    PREMIUM_PRICE;
+
+  premiumDurationDays =
+    PREMIUM_DURATION_DAYS;
+
+  premiumPlan =
+    "annual";
+
+}
+
+
+/*
+ * Reject unknown Premium amounts.
+ */
+
+else {
+
+  return res.status(200).json({
+
+    success: true,
+
+    message:
+      "Payment amount does not match any Premium plan.",
+
+  });
+
+}
 
 
       /*
@@ -2177,7 +2235,43 @@ const paystackWebhook =
 
       }
 
+/*
+ * Make sure monthly and six-month
+ * payments have the correct plan metadata.
+ */
 
+if (
+  premiumPlan === "monthly" &&
+  metadata.plan !== "monthly"
+) {
+
+  return res.status(200).json({
+
+    success: true,
+
+    message:
+      "Monthly Premium payment metadata is invalid.",
+
+  });
+
+}
+
+
+if (
+  premiumPlan === "six-month" &&
+  metadata.plan !== "six-month"
+) {
+
+  return res.status(200).json({
+
+    success: true,
+
+    message:
+      "Six-month Premium payment metadata is invalid.",
+
+  });
+
+}
       if (
         !metadata.storeId ||
         !metadata.ownerId
@@ -2226,21 +2320,54 @@ const paystackWebhook =
 
 
       /*
-       * Activate Premium.
-       */
+ * Activate the correct Premium plan.
+ */
 
-      const result =
-        await activatePremium({
+let result;
 
-          store,
 
-          paymentReference:
-            paystackData.reference,
+if (
+  premiumPlan === "annual"
+) {
 
-          paymentId:
-            paystackData.id,
+  result =
+    await activatePremium({
 
-        });
+      store,
+
+      paymentReference:
+        paystackData.reference,
+
+      paymentId:
+        paystackData.id,
+
+    });
+
+} else {
+
+  result =
+    await activatePremiumPlan({
+
+      store,
+
+      paymentReference:
+        paystackData.reference,
+
+      paymentId:
+        paystackData.id,
+
+      amount:
+        premiumAmount,
+
+      durationDays:
+        premiumDurationDays,
+
+         plan:
+      premiumPlan,
+
+    });
+
+}
 
 
       console.log(
@@ -2449,59 +2576,83 @@ const now = new Date();
 
 let active = false;
 
-let subscription =
+const subscription =
   await Subscription.findOne({
     storeId: store._id,
-    plan: "premium",
+    plan: {
+      $in: [
+        "premium",
+        "monthly",
+        "six-month",
+        "annual",
+      ],
+    },
     status: "active",
   }).sort({
-    expiryDate: -1,
+    createdAt: -1,
   });
 
 
-/*
- * Check the actual Subscription expiry date.
- */
+const storeExpiry =
+  store.subscriptionExpiry
+    ? new Date(store.subscriptionExpiry)
+    : null;
+
+const subscriptionExpiry =
+  subscription &&
+  subscription.expiryDate
+    ? new Date(subscription.expiryDate)
+    : null;
+
+
+/* =========================================
+   CHECK BOTH EXPIRY DATES
+========================================= */
+
+const storeStillActive =
+  storeExpiry &&
+  storeExpiry > now;
+
+const subscriptionStillActive =
+  subscriptionExpiry &&
+  subscriptionExpiry > now;
+
 
 if (
-  subscription &&
-  subscription.expiryDate &&
-  new Date(subscription.expiryDate) > now
+  storeStillActive &&
+  subscriptionStillActive
 ) {
-
   active = true;
-
 }
 
 
-/*
- * Automatically lock expired Premium.
- */
+/* =========================================
+   AUTOMATICALLY EXPIRE SUBSCRIPTION
+========================================= */
 
 if (
   subscription &&
-  subscription.expiryDate &&
-  new Date(subscription.expiryDate) <= now
+  subscriptionExpiry &&
+  subscriptionExpiry <= now
 ) {
 
   subscription.status = "expired";
 
   await subscription.save();
 
-  active = false;
-
 }
 
 
-/*
- * Synchronize Store Premium status.
- */
+/* =========================================
+   SYNCHRONIZE STORE PREMIUM STATUS
+========================================= */
 
 if (active) {
 
   store.plan = "premium";
 
-  store.subscriptionStatus = "active";
+  store.subscriptionStatus =
+    "active";
 
   store.subscriptionStart =
     subscription.startDate;
@@ -2515,12 +2666,12 @@ if (active) {
 
   store.plan = "free";
 
-  store.subscriptionStatus = "expired";
+  store.subscriptionStatus =
+    "expired";
 
   await store.save();
 
 }
-
 
 /*
  * Use the Subscription expiry date
@@ -2563,31 +2714,32 @@ if (
 
         premium: {
 
-          active,
+  active,
 
-          plan:
-            active
-              ? "premium"
-              : "free",
+  plan:
+    active && subscription
+      ? subscription.plan
+      : "free",
 
-          price:
-            PREMIUM_PRICE,
+  price:
+    active && subscription
+      ? subscription.amount
+      : 0,
 
-          currency:
-            "NGN",
+  currency:
+    "NGN",
 
-          expiry,
+  expiry,
 
-          daysRemaining,
+  daysRemaining,
 
-          subscriptionStatus:
-            active
-              ? "active"
-              : store.subscriptionStatus ||
-                "inactive",
+  subscriptionStatus:
+    active
+      ? "active"
+      : store.subscriptionStatus ||
+        "inactive",
 
-        },
-
+},
       });
 
 

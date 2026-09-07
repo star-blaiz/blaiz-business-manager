@@ -21,52 +21,146 @@ import {
 const App =
     window.Capacitor?.Plugins?.App;
 
+
 if (App) {
+
     App.addListener(
         "appUrlOpen",
         async ({ url }) => {
 
-        console.log(
-            "Blaiz deep link received:",
-            url
-        );
-
-        if (
-            !url ||
-            !url.startsWith(
-                "blaiz://payment"
-            )
-        ) {
-            return;
-        }
-
-        const parsedUrl =
-            new URL(url);
-
-        const reference =
-            parsedUrl.searchParams.get(
-                "reference"
+            console.log(
+                "Blaiz deep link received:",
+                url
             );
 
-        if (!reference) {
-            console.error(
-                "No payment reference found in deep link."
+
+            if (
+                !url ||
+                !url.startsWith(
+                    "blaiz://payment"
+                )
+            ) {
+                return;
+            }
+
+
+            const parsedUrl =
+                new URL(url);
+
+
+            const reference =
+                parsedUrl.searchParams.get(
+                    "reference"
+                );
+
+
+            if (!reference) {
+
+                console.error(
+                    "No payment reference found in deep link."
+                );
+
+                return;
+
+            }
+
+
+            /*
+             * Save the reference in BOTH
+             * storage locations.
+             *
+             * This protects the payment flow
+             * if Android recreates the WebView.
+             */
+
+            localStorage.setItem(
+                "blaiz_premium_reference",
+                reference
             );
-            return;
-        }
 
-        localStorage.setItem(
-            "blaiz_premium_reference",
-            reference
-        );
 
-        if (isLoggedIn()) {
-            await verifyReturnedPremiumPayment();
+            sessionStorage.setItem(
+                "blaiz_premium_reference",
+                reference
+            );
+
+
+            /*
+             * Determine which Premium plan
+             * was paid for from the Paystack
+             * payment reference.
+             */
+
+            let premiumPlan =
+                "annual";
+
+
+            if (
+                reference.startsWith(
+                    "BLAIZ-MONTHLY-"
+                )
+            ) {
+
+                premiumPlan =
+                    "monthly";
+
+            } else if (
+                reference.startsWith(
+                    "BLAIZ-SIX-MONTH-"
+                )
+            ) {
+
+                premiumPlan =
+                    "six-month";
+
+            }
+
+
+            /*
+             * Save the Premium plan so the
+             * verification function knows
+             * which backend endpoint to use.
+             */
+
+            localStorage.setItem(
+                "blaiz_premium_plan",
+                premiumPlan
+            );
+
+
+            sessionStorage.setItem(
+                "blaiz_premium_plan",
+                premiumPlan
+            );
+
+
+            console.log(
+                "Premium payment plan:",
+                premiumPlan
+            );
+
+
+            console.log(
+                "Premium payment reference:",
+                reference
+            );
+
+
+            /*
+             * Verify the payment immediately
+             * if the user is logged in.
+             */
+
+            if (isLoggedIn()) {
+
+                await verifyReturnedPremiumPayment();
+
+            }
+
         }
-    }
-);
+    );
+
 }
-
 /* =========================
    ELEMENTS
 ========================= */
@@ -208,22 +302,30 @@ function initializeApp() {
 
 
             /*
-             * Check if the user has returned
-             * from a Premium Paystack payment.
-             */
+ * Check if the user has returned
+ * from a Premium Paystack payment.
+ *
+ * We check storage instead of relying
+ * on a specific browser pathname because
+ * Android returns through:
+ *
+ * blaiz://payment
+ */
 
-            const currentPath =
-                window.location.pathname;
+const returnedPremiumReference =
+    sessionStorage.getItem(
+        "blaiz_premium_reference"
+    ) ||
+    localStorage.getItem(
+        "blaiz_premium_reference"
+    );
 
 
-            if (
-                currentPath ===
-                "/premium-payment"
-            ) {
+if (returnedPremiumReference) {
 
-                await verifyReturnedPremiumPayment();
+    await verifyReturnedPremiumPayment();
 
-            }
+}
 
         } else {
 
@@ -7737,8 +7839,16 @@ async function loadPremium() {
                             </span>
 
                             <strong>
-                                Premium
-                            </strong>
+    ${
+        premium.plan === "monthly"
+            ? "Monthly"
+            : premium.plan === "six-month"
+                ? "Six-Month"
+                : premium.plan === "annual"
+                    ? "Annual"
+                    : "Premium"
+    }
+</strong>
                         </div>
 
                         <div>
@@ -7747,8 +7857,14 @@ async function loadPremium() {
                             </span>
 
                             <strong>
-                                ₦30,000 / year
-                            </strong>
+    ₦${Number(premium.price || 0).toLocaleString()} / ${
+        premium.plan === "monthly"
+            ? "30 days"
+            : premium.plan === "six-month"
+                ? "180 days"
+                : "365 days"
+    }
+</strong>
                         </div>
 
                         <div>
@@ -7984,7 +8100,7 @@ async function loadPremium() {
                 </span>
 
                 <strong>
-                    ₦15,000 / 6 month
+                    ₦15,000 / 6 months
                 </strong>
 
             </div>
@@ -8489,14 +8605,20 @@ async function loadPremium() {
 async function verifyReturnedPremiumPayment() {
 
     const reference =
-        sessionStorage.getItem(
-            "blaiz_premium_reference"
-        );
+    sessionStorage.getItem(
+        "blaiz_premium_reference"
+    ) ||
+    localStorage.getItem(
+        "blaiz_premium_reference"
+    );
 
     const premiumPlan =
-        sessionStorage.getItem(
-            "blaiz_premium_plan"
-        );
+    sessionStorage.getItem(
+        "blaiz_premium_plan"
+    ) ||
+    localStorage.getItem(
+        "blaiz_premium_plan"
+    );
 
     if (!reference) {
         return;
@@ -8559,6 +8681,14 @@ async function verifyReturnedPremiumPayment() {
             );
 
             sessionStorage.removeItem(
+    "blaiz_premium_plan"
+);
+
+localStorage.removeItem(
+    "blaiz_premium_reference"
+);
+
+localStorage.removeItem(
     "blaiz_premium_plan"
 );
 
