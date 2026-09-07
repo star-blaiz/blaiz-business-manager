@@ -15,6 +15,7 @@
     "@capacitor/app": "^8.0.0",
     "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.5.0",
+    "@capacitor/share": "^8.0.1",
     "@capgo/capacitor-pdf-generator": "^8.0.36",
     "@capgo/capacitor-printer": "^8.1.3"
   }

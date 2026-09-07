@@ -7505,36 +7505,74 @@ async function printReceipt(receiptNumber) {
         `;
 
 
-        /* =========================
-   ANDROID / BROWSER PRINT
+       /* =========================
+   ANDROID PDF / BROWSER PRINT
 ========================= */
 
-const printWindow = window.open(
-    "",
-    "_blank"
-);
+const isAndroid =
+    /Android/i.test(navigator.userAgent);
 
-if (!printWindow) {
-    throw new Error(
-        "Unable to open print window. Please allow pop-ups."
+if (isAndroid) {
+
+    const pdfGenerator =
+        window.CapgoCapacitorPdfGenerator;
+
+    if (!pdfGenerator) {
+
+        throw new Error(
+            "PDF generator is not available."
+        );
+
+    }
+
+    await pdfGenerator.PdfGenerator.fromData({
+
+        data: receiptHtml,
+
+        documentSize: "58mm",
+
+        orientation: "portrait",
+
+        type: "share",
+
+        fileName:
+            `Receipt-${receiptNumber}.pdf`
+
+    });
+
+} else {
+
+    const printWindow =
+        window.open(
+            "",
+            "_blank"
+        );
+
+    if (!printWindow) {
+
+        throw new Error(
+            "Unable to open print window. Please allow pop-ups."
+        );
+
+    }
+
+    printWindow.document.open();
+
+    printWindow.document.write(
+        receiptHtml
     );
+
+    printWindow.document.close();
+
+    printWindow.focus();
+
+    setTimeout(() => {
+
+        printWindow.print();
+
+    }, 300);
+
 }
-
-printWindow.document.open();
-
-printWindow.document.write(
-    receiptHtml
-);
-
-printWindow.document.close();
-
-printWindow.focus();
-
-setTimeout(() => {
-
-    printWindow.print();
-
-}, 300);
 
 
     } catch (error) {
