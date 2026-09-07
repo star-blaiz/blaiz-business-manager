@@ -1,3 +1,4 @@
+
 import {
     loginUser,
     registerOwner,
@@ -13,6 +14,58 @@ import {
     apiRequest
 } from "./api.js";
 
+/* =========================
+   ANDROID PAYMENT DEEP LINK
+========================= */
+
+const App =
+    window.Capacitor?.Plugins?.App;
+
+if (App) {
+    App.addListener(
+        "appUrlOpen",
+        async ({ url }) => {
+
+        console.log(
+            "Blaiz deep link received:",
+            url
+        );
+
+        if (
+            !url ||
+            !url.startsWith(
+                "blaiz://payment"
+            )
+        ) {
+            return;
+        }
+
+        const parsedUrl =
+            new URL(url);
+
+        const reference =
+            parsedUrl.searchParams.get(
+                "reference"
+            );
+
+        if (!reference) {
+            console.error(
+                "No payment reference found in deep link."
+            );
+            return;
+        }
+
+        localStorage.setItem(
+            "blaiz_premium_reference",
+            reference
+        );
+
+        if (isLoggedIn()) {
+            await verifyReturnedPremiumPayment();
+        }
+    }
+);
+}
 
 /* =========================
    ELEMENTS
@@ -1793,6 +1846,13 @@ function renderProducts(
             }
         );
 
+        filteredProducts.sort((a, b) =>
+    (a.name || "").localeCompare(
+        b.name || "",
+        undefined,
+        { sensitivity: "base" }
+    )
+);
 
     if (
         filteredProducts.length === 0
@@ -3233,6 +3293,13 @@ function renderCustomers(
             }
         );
 
+        filteredCustomers.sort((a, b) =>
+    (a.name || "").localeCompare(
+        b.name || "",
+        undefined,
+        { sensitivity: "base" }
+    )
+);
 
     if (
         filteredCustomers.length === 0
@@ -6814,540 +6881,558 @@ async function printReceipt(receiptNumber) {
 
 
         /* =========================
-           SAVE CURRENT PAGE
+           RECEIPT HTML
         ========================= */
 
-        const originalBody =
-            document.body.innerHTML;
+        const receiptHtml = `
 
-        const originalTitle =
-            document.title;
+            <!DOCTYPE html>
+
+            <html>
+
+            <head>
+
+                <meta charset="UTF-8">
+
+                <title>
+                    Receipt ${escapeHtml(
+                        receipt.receiptNumber ||
+                        ""
+                    )}
+                </title>
 
 
-        /* =========================
-           CREATE PRINT CONTENT
-        ========================= */
+                <style>
 
-        document.body.innerHTML = `
-
-            <div class="blaiz-print-receipt">
-
-                <div class="header">
-
-                    <h1>
-                        ${escapeHtml(
-                            receipt.store?.name ||
-                            "Store"
-                        )}
-                    </h1>
-
-                    ${
-                        receipt.store?.phone
-                            ? `
-                                <p>
-                                    ${escapeHtml(
-                                        receipt.store.phone
-                                    )}
-                                </p>
-                            `
-                            : ""
+                    * {
+                        box-sizing: border-box;
                     }
 
-                    ${
-                        receipt.store?.email
-                            ? `
-                                <p>
-                                    ${escapeHtml(
-                                        receipt.store.email
-                                    )}
-                                </p>
-                            `
-                            : ""
-                    }
-
-                    ${
-                        receipt.store?.address
-                            ? `
-                                <p>
-                                    ${escapeHtml(
-                                        receipt.store.address
-                                    )}
-                                </p>
-                            `
-                            : ""
-                    }
-
-                </div>
-
-
-                <div class="receipt-title">
-                    SALES RECEIPT
-                </div>
-
-
-                <div class="info">
-
-                    <p>
-                        <strong>
-                            Receipt:
-                        </strong>
-
-                        ${escapeHtml(
-                            receipt.receiptNumber ||
-                            "Not available"
-                        )}
-                    </p>
-
-
-                    <p>
-                        <strong>
-                            Date:
-                        </strong>
-
-                        ${escapeHtml(date)}
-                    </p>
-
-
-                    <p>
-                        <strong>
-                            Customer:
-                        </strong>
-
-                        ${escapeHtml(
-                            receipt.customer?.name ||
-                            "Walk-in Customer"
-                        )}
-                    </p>
-
-
-                    ${
-                        receipt.soldBy
-                            ? `
-                                <p>
-                                    <strong>
-                                        Sold By:
-                                    </strong>
-
-                                    ${escapeHtml(
-                                        receipt.soldBy.name ||
-                                        "Unknown"
-                                    )}
-                                </p>
-                            `
-                            : ""
-                    }
-
-                </div>
-
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Product
-                            </th>
-
-                            <th>
-                                Qty
-                            </th>
-
-                            <th>
-                                Price
-                            </th>
-
-                            <th>
-                                Total
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                        ${itemsHtml}
-
-                    </tbody>
-
-                </table>
-
-
-                <div class="summary">
-
-                    <div class="summary-row">
-
-                        <span>
-                            Subtotal
-                        </span>
-
-                        <strong>
-                            ${formatCurrency(
-                                Number(
-                                    receipt.subtotal || 0
-                                )
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="summary-row">
-
-                        <span>
-                            Discount
-                        </span>
-
-                        <strong>
-                            ${formatCurrency(
-                                Number(
-                                    receipt.discount || 0
-                                )
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="summary-row total">
-
-                        <span>
-                            TOTAL
-                        </span>
-
-                        <strong>
-                            ${formatCurrency(
-                                Number(
-                                    receipt.totalAmount || 0
-                                )
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="summary-row">
-
-                        <span>
-                            Amount Paid
-                        </span>
-
-                        <strong>
-                            ${formatCurrency(
-                                Number(
-                                    receipt.amountPaid || 0
-                                )
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="summary-row">
-
-                        <span>
-                            Outstanding Debt
-                        </span>
-
-                        <strong>
-                            ${formatCurrency(
-                                Number(
-                                    receipt.debt || 0
-                                )
-                            )}
-                        </strong>
-
-                    </div>
-
-
-                    <div class="summary-row">
-
-                        <span>
-                            Payment Method
-                        </span>
-
-                        <strong>
-                            ${escapeHtml(
-                                formatPaymentMethod(
-                                    receipt.paymentMethod
-                                )
-                            )}
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                <div class="footer">
-
-                    <p>
-                        Thank you for your patronage!
-                    </p>
-
-                    <p>
-                        Powered by Blaiz Business Manager
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <style>
-
-                * {
-                    box-sizing: border-box;
-                }
-
-
-                body {
-                    font-family:
-                        Arial,
-                        sans-serif;
-
-                    margin: 0;
-
-                    padding: 30px;
-
-                    color: #111;
-
-                    background: #fff;
-                }
-
-
-                .blaiz-print-receipt {
-
-                    max-width: 700px;
-
-                    margin: auto;
-                }
-
-
-                .header {
-
-                    text-align: center;
-
-                    margin-bottom: 20px;
-                }
-
-
-                .header h1 {
-
-                    margin:
-                        0 0 8px;
-
-                    font-size: 26px;
-                }
-
-
-                .header p {
-
-                    margin: 4px 0;
-
-                    font-size: 14px;
-                }
-
-
-                .receipt-title {
-
-                    text-align: center;
-
-                    margin: 20px 0;
-
-                    font-size: 20px;
-
-                    font-weight: bold;
-                }
-
-
-                .info {
-
-                    margin-bottom: 20px;
-                }
-
-
-                .info p {
-
-                    margin: 6px 0;
-                }
-
-
-                table {
-
-                    width: 100%;
-
-                    border-collapse:
-                        collapse;
-
-                    margin-top: 15px;
-                }
-
-
-                th,
-                td {
-
-                    border-bottom:
-                        1px solid #ddd;
-
-                    padding:
-                        10px 6px;
-
-                    text-align: left;
-                }
-
-
-                th {
-
-                    font-weight: bold;
-                }
-
-
-                td:nth-child(2),
-                td:nth-child(3),
-                td:nth-child(4),
-                th:nth-child(2),
-                th:nth-child(3),
-                th:nth-child(4) {
-
-                    text-align: right;
-                }
-
-
-                .summary {
-
-                    margin-top: 20px;
-
-                    border-top:
-                        2px solid #111;
-
-                    padding-top: 12px;
-                }
-
-
-                .summary-row {
-
-                    display: flex;
-
-                    justify-content:
-                        space-between;
-
-                    padding: 5px 0;
-                }
-
-
-                .summary-row.total {
-
-                    font-size: 18px;
-
-                    font-weight: bold;
-
-                    margin-top: 8px;
-                }
-
-
-                .footer {
-
-                    text-align: center;
-
-                    margin-top: 35px;
-
-                    border-top:
-                        1px solid #ddd;
-
-                    padding-top: 15px;
-
-                    font-size: 13px;
-                }
-
-
-                @media print {
 
                     body {
 
-                        padding: 10px;
+                        font-family:
+                            Arial,
+                            sans-serif;
+
+                        margin: 0;
+
+                        padding: 30px;
+
+                        color: #111;
+
+                        background: #fff;
+
                     }
 
 
-                    .blaiz-print-receipt {
+                    .receipt {
 
-                        max-width: none;
+                        max-width: 700px;
+
+                        margin: auto;
+
                     }
 
-                }
 
-            </style>
+                    .header {
+
+                        text-align: center;
+
+                        margin-bottom: 20px;
+
+                    }
+
+
+                    .header h1 {
+
+                        margin:
+                            0 0 8px;
+
+                        font-size: 26px;
+
+                    }
+
+
+                    .header p {
+
+                        margin: 4px 0;
+
+                        font-size: 14px;
+
+                    }
+
+
+                    .receipt-title {
+
+                        text-align: center;
+
+                        margin: 20px 0;
+
+                        font-size: 20px;
+
+                        font-weight: bold;
+
+                    }
+
+
+                    .info {
+
+                        margin-bottom: 20px;
+
+                    }
+
+
+                    .info p {
+
+                        margin: 6px 0;
+
+                    }
+
+
+                    table {
+
+                        width: 100%;
+
+                        border-collapse:
+                            collapse;
+
+                        margin-top: 15px;
+
+                    }
+
+
+                    th,
+                    td {
+
+                        border-bottom:
+                            1px solid #ddd;
+
+                        padding:
+                            10px 6px;
+
+                        text-align: left;
+
+                    }
+
+
+                    th {
+
+                        font-weight: bold;
+
+                    }
+
+
+                    td:nth-child(2),
+                    td:nth-child(3),
+                    td:nth-child(4),
+                    th:nth-child(2),
+                    th:nth-child(3),
+                    th:nth-child(4) {
+
+                        text-align: right;
+
+                    }
+
+
+                    .summary {
+
+                        margin-top: 20px;
+
+                        border-top:
+                            2px solid #111;
+
+                        padding-top: 12px;
+
+                    }
+
+
+                    .summary-row {
+
+                        display: flex;
+
+                        justify-content:
+                            space-between;
+
+                        padding: 5px 0;
+
+                    }
+
+
+                    .summary-row.total {
+
+                        font-size: 18px;
+
+                        font-weight: bold;
+
+                        margin-top: 8px;
+
+                    }
+
+
+                    .footer {
+
+                        text-align: center;
+
+                        margin-top: 35px;
+
+                        border-top:
+                            1px solid #ddd;
+
+                        padding-top: 15px;
+
+                        font-size: 13px;
+
+                    }
+
+
+                    @media print {
+
+                        body {
+
+                            padding: 10px;
+
+                        }
+
+
+                        .receipt {
+
+                            max-width: none;
+
+                        }
+
+                    }
+
+                </style>
+
+            </head>
+
+
+            <body>
+
+                <div class="receipt">
+
+
+                    <div class="header">
+
+                        <h1>
+                            ${escapeHtml(
+                                receipt.store?.name ||
+                                "Store"
+                            )}
+                        </h1>
+
+
+                        ${
+                            receipt.store?.phone
+                                ? `
+                                    <p>
+                                        ${escapeHtml(
+                                            receipt.store.phone
+                                        )}
+                                    </p>
+                                `
+                                : ""
+                        }
+
+
+                        ${
+                            receipt.store?.email
+                                ? `
+                                    <p>
+                                        ${escapeHtml(
+                                            receipt.store.email
+                                        )}
+                                    </p>
+                                `
+                                : ""
+                        }
+
+
+                        ${
+                            receipt.store?.address
+                                ? `
+                                    <p>
+                                        ${escapeHtml(
+                                            receipt.store.address
+                                        )}
+                                    </p>
+                                `
+                                : ""
+                        }
+
+                    </div>
+
+
+                    <div class="receipt-title">
+
+                        SALES RECEIPT
+
+                    </div>
+
+
+                    <div class="info">
+
+                        <p>
+
+                            <strong>
+                                Receipt:
+                            </strong>
+
+                            ${escapeHtml(
+                                receipt.receiptNumber ||
+                                "Not available"
+                            )}
+
+                        </p>
+
+
+                        <p>
+
+                            <strong>
+                                Date:
+                            </strong>
+
+                            ${escapeHtml(
+                                date
+                            )}
+
+                        </p>
+
+
+                        <p>
+
+                            <strong>
+                                Customer:
+                            </strong>
+
+                            ${escapeHtml(
+                                receipt.customer?.name ||
+                                "Walk-in Customer"
+                            )}
+
+                        </p>
+
+
+                        ${
+                            receipt.soldBy
+                                ? `
+                                    <p>
+
+                                        <strong>
+                                            Sold By:
+                                        </strong>
+
+                                        ${escapeHtml(
+                                            receipt.soldBy.name ||
+                                            "Unknown"
+                                        )}
+
+                                    </p>
+                                `
+                                : ""
+                        }
+
+                    </div>
+
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Product
+                                </th>
+
+                                <th>
+                                    Qty
+                                </th>
+
+                                <th>
+                                    Price
+                                </th>
+
+                                <th>
+                                    Total
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            ${itemsHtml}
+
+                        </tbody>
+
+                    </table>
+
+
+                    <div class="summary">
+
+
+                        <div class="summary-row">
+
+                            <span>
+                                Subtotal
+                            </span>
+
+                            <strong>
+                                ${formatCurrency(
+                                    Number(
+                                        receipt.subtotal || 0
+                                    )
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-row">
+
+                            <span>
+                                Discount
+                            </span>
+
+                            <strong>
+                                ${formatCurrency(
+                                    Number(
+                                        receipt.discount || 0
+                                    )
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-row total">
+
+                            <span>
+                                TOTAL
+                            </span>
+
+                            <strong>
+                                ${formatCurrency(
+                                    Number(
+                                        receipt.totalAmount || 0
+                                    )
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-row">
+
+                            <span>
+                                Amount Paid
+                            </span>
+
+                            <strong>
+                                ${formatCurrency(
+                                    Number(
+                                        receipt.amountPaid || 0
+                                    )
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-row">
+
+                            <span>
+                                Outstanding Debt
+                            </span>
+
+                            <strong>
+                                ${formatCurrency(
+                                    Number(
+                                        receipt.debt || 0
+                                    )
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-row">
+
+                            <span>
+                                Payment Method
+                            </span>
+
+                            <strong>
+                                ${escapeHtml(
+                                    formatPaymentMethod(
+                                        receipt.paymentMethod
+                                    )
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="footer">
+
+                        <p>
+                            Thank you for your patronage!
+                        </p>
+
+
+                        <p>
+                            Powered by Blaiz Business Manager
+                        </p>
+
+                    </div>
+
+
+                </div>
+
+            </body>
+
+            </html>
+
         `;
 
 
-        document.title =
-            `Receipt ${
-                receipt.receiptNumber || ""
-            }`;
-
-
         /* =========================
-           PRINT
-        ========================= */
+   ANDROID / BROWSER PRINT
+========================= */
 
-        setTimeout(
-            () => {
+const printWindow = window.open(
+    "",
+    "_blank"
+);
 
-                window.print();
+if (!printWindow) {
+    throw new Error(
+        "Unable to open print window. Please allow pop-ups."
+    );
+}
 
-            },
-            300
-        );
+printWindow.document.open();
 
+printWindow.document.write(
+    receiptHtml
+);
 
-        /* =========================
-           RESTORE APP AFTER PRINT
-        ========================= */
+printWindow.document.close();
 
-        const restoreApp =
-            () => {
+printWindow.focus();
 
-                document.body.innerHTML =
-                    originalBody;
+setTimeout(() => {
 
-                document.title =
-                    originalTitle;
+    printWindow.print();
 
-                window.removeEventListener(
-                    "afterprint",
-                    restoreApp
-                );
-
-            };
-
-
-        window.addEventListener(
-            "afterprint",
-            restoreApp
-        );
-
-
-        /* Fallback for Android/WebView */
-
-        setTimeout(
-            () => {
-
-                if (
-                    document.querySelector(
-                        ".blaiz-print-receipt"
-                    )
-                ) {
-
-                    restoreApp();
-
-                }
-
-            },
-            3000
-        );
+}, 300);
 
 
     } catch (error) {
@@ -7356,6 +7441,7 @@ async function printReceipt(receiptNumber) {
             "Print receipt error:",
             error
         );
+
 
         showNotification(
             error.message ||
@@ -7695,7 +7781,7 @@ async function loadPremium() {
         }
 
 
-        premiumContent.innerHTML = `
+        /*premiumContent.innerHTML = `
 
             <div class="premium-card">
 
@@ -7784,8 +7870,273 @@ async function loadPremium() {
 
             </div>
 
-        `;
+        `;*/
 
+        premiumContent.innerHTML = `
+
+    <!-- =========================
+         MONTHLY PREMIUM
+    ========================== -->
+
+    <div class="premium-card">
+
+        <h2>
+            Upgrade to Premium
+        </h2>
+
+        <p>
+            Unlock unlimited business
+            management for your store.
+        </p>
+
+
+        <div class="premium-details">
+
+            <div>
+
+                <span>
+                    Premium Price
+                </span>
+
+                <strong>
+                    ₦5,000 / month
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Duration
+                </span>
+
+                <strong>
+                    30 Days
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="premium-features">
+
+            <h3>
+                Premium Benefits
+            </h3>
+
+            <p>
+                ✓ Unlimited products
+            </p>
+
+            <p>
+                ✓ Unlimited sales
+            </p>
+
+            <p>
+                ✓ Unlimited customers
+            </p>
+
+            <p>
+                ✓ Unlimited workers
+            </p>
+
+            <p>
+                ✓ Full access to business features
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="primary-btn"
+            id="upgradeMonthlyPremiumBtn"
+        >
+            Upgrade to Premium
+        </button>
+
+    </div><br>
+
+    <!-- =========================
+         SIX MONTHS PREMIUM
+    ========================== -->
+
+    <div class="premium-card">
+
+        <h2>
+            Upgrade to Premium
+        </h2>
+
+        <p>
+            Unlock unlimited business
+            management for your store.
+        </p>
+
+
+        <div class="premium-details">
+
+            <div>
+
+                <span>
+                    Premium Price
+                </span>
+
+                <strong>
+                    ₦15,000 / 6 month
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Duration
+                </span>
+
+                <strong>
+                    180 Days
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="premium-features">
+
+            <h3>
+                Premium Benefits
+            </h3>
+
+            <p>
+                ✓ Unlimited products
+            </p>
+
+            <p>
+                ✓ Unlimited sales
+            </p>
+
+            <p>
+                ✓ Unlimited customers
+            </p>
+
+            <p>
+                ✓ Unlimited workers
+            </p>
+
+            <p>
+                ✓ Full access to business features
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="primary-btn"
+            id="upgradeSixMonthPremiumBtn"
+        >
+            Upgrade to Premium
+        </button>
+
+    </div><br>
+
+
+    <!-- =========================
+         ANNUAL PREMIUM
+    ========================== -->
+
+    <div class="premium-card">
+
+        <h2>
+            Upgrade to Premium
+        </h2>
+
+        <p>
+            Unlock unlimited business
+            management for your store.
+        </p>
+
+
+        <div class="premium-details">
+
+            <div>
+
+                <span>
+                    Premium Price
+                </span>
+
+                <strong>
+                    ₦30,000 / year
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    Duration
+                </span>
+
+                <strong>
+                    365 Days
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="premium-features">
+
+            <h3>
+                Premium Benefits
+            </h3>
+
+            <p>
+                ✓ Unlimited products
+            </p>
+
+            <p>
+                ✓ Unlimited sales
+            </p>
+
+            <p>
+                ✓ Unlimited customers
+            </p>
+
+            <p>
+                ✓ Unlimited workers
+            </p>
+
+            <p>
+                ✓ Full access to business features
+            </p>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="primary-btn"
+            id="upgradePremiumBtn"
+        >
+            Upgrade to Premium
+        </button>
+
+
+        <p
+            id="premiumMessage"
+            class="form-message"
+        ></p>
+
+    </div>
+
+`;
 
         const upgradeButton =
             document.getElementById(
@@ -7888,6 +8239,225 @@ async function loadPremium() {
             }
         );
 
+                /* =========================================================
+           MONTHLY PREMIUM PAYMENT
+        ========================================================= */
+
+        const upgradeMonthlyButton =
+            document.getElementById(
+                "upgradeMonthlyPremiumBtn"
+            );
+
+
+        if (upgradeMonthlyButton) {
+
+            upgradeMonthlyButton.addEventListener(
+                "click",
+                async () => {
+
+                    upgradeMonthlyButton.disabled = true;
+
+                    upgradeMonthlyButton.textContent =
+                        "Connecting to Paystack...";
+
+
+                    const message =
+                        document.getElementById(
+                            "premiumMessage"
+                        );
+
+
+                    if (message) {
+                        message.textContent = "";
+                    }
+
+
+                    try {
+
+                        const payment =
+                            await apiRequest(
+                                "/premium/monthly/initialize",
+                                {
+                                    method: "POST"
+                                }
+                            );
+
+
+                        if (
+                            !payment.authorizationUrl
+                        ) {
+
+                            throw new Error(
+                                "Unable to start monthly Premium payment."
+                            );
+
+                        }
+
+
+                        /*
+                         * Remember that this is a
+                         * monthly Premium payment.
+                         */
+
+                        sessionStorage.setItem(
+                            "blaiz_premium_plan",
+                            "monthly"
+                        );
+
+
+                        sessionStorage.setItem(
+                            "blaiz_premium_reference",
+                            payment.reference
+                        );
+
+
+                        /*
+                         * Open Paystack.
+                         */
+
+                        window.location.href =
+                            payment.authorizationUrl;
+
+                    } catch (error) {
+
+                        console.error(
+                            "Monthly Premium payment error:",
+                            error
+                        );
+
+
+                        if (message) {
+
+                            message.textContent =
+                                error.message ||
+                                "Unable to start monthly Premium payment.";
+
+                        }
+
+
+                        upgradeMonthlyButton.disabled =
+                            false;
+
+                        upgradeMonthlyButton.textContent =
+                            "Upgrade to Premium";
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        /* =========================================================
+           SIX-MONTH PREMIUM PAYMENT
+        ========================================================= */
+
+        const upgradeSixMonthButton =
+            document.getElementById(
+                "upgradeSixMonthPremiumBtn"
+            );
+
+
+        if (upgradeSixMonthButton) {
+
+            upgradeSixMonthButton.addEventListener(
+                "click",
+                async () => {
+
+                    upgradeSixMonthButton.disabled = true;
+
+                    upgradeSixMonthButton.textContent =
+                        "Connecting to Paystack...";
+
+
+                    const message =
+                        document.getElementById(
+                            "premiumMessage"
+                        );
+
+
+                    if (message) {
+                        message.textContent = "";
+                    }
+
+
+                    try {
+
+                        const payment =
+                            await apiRequest(
+                                "/premium/six-month/initialize",
+                                {
+                                    method: "POST"
+                                }
+                            );
+
+
+                        if (
+                            !payment.authorizationUrl
+                        ) {
+
+                            throw new Error(
+                                "Unable to start six-month Premium payment."
+                            );
+
+                        }
+
+
+                        /*
+                         * Remember that this is a
+                         * six-month Premium payment.
+                         */
+
+                        sessionStorage.setItem(
+                            "blaiz_premium_plan",
+                            "six-month"
+                        );
+
+
+                        sessionStorage.setItem(
+                            "blaiz_premium_reference",
+                            payment.reference
+                        );
+
+
+                        /*
+                         * Open Paystack.
+                         */
+
+                        window.location.href =
+                            payment.authorizationUrl;
+
+                    } catch (error) {
+
+                        console.error(
+                            "Six-month Premium payment error:",
+                            error
+                        );
+
+
+                        if (message) {
+
+                            message.textContent =
+                                error.message ||
+                                "Unable to start six-month Premium payment.";
+
+                        }
+
+
+                        upgradeSixMonthButton.disabled =
+                            false;
+
+                        upgradeSixMonthButton.textContent =
+                            "Upgrade to Premium";
+
+                    }
+
+                }
+            );
+
+        }
+
     } catch (error) {
 
         console.error(
@@ -7923,8 +8493,35 @@ async function verifyReturnedPremiumPayment() {
             "blaiz_premium_reference"
         );
 
+    const premiumPlan =
+        sessionStorage.getItem(
+            "blaiz_premium_plan"
+        );
+
     if (!reference) {
         return;
+    }
+
+
+    /*
+     * Select the correct verification
+     * endpoint based on the Premium plan.
+     */
+
+    let verifyEndpoint =
+        "/premium/verify";
+
+
+    if (premiumPlan === "monthly") {
+
+        verifyEndpoint =
+            "/premium/monthly/verify";
+
+    } else if (premiumPlan === "six-month") {
+
+        verifyEndpoint =
+            "/premium/six-month/verify";
+
     }
 
     try {
@@ -7936,7 +8533,7 @@ async function verifyReturnedPremiumPayment() {
 
         const result =
             await apiRequest(
-                "/premium/verify",
+                verifyEndpoint,
                 {
                     method: "POST",
 
@@ -7960,6 +8557,10 @@ async function verifyReturnedPremiumPayment() {
             sessionStorage.removeItem(
                 "blaiz_premium_reference"
             );
+
+            sessionStorage.removeItem(
+    "blaiz_premium_plan"
+);
 
 
             showNotification(

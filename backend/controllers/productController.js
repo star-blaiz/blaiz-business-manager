@@ -154,7 +154,7 @@ const getProducts = async (req, res) => {
     const products = await Product.find({
       storeId: req.user.storeId,
     })
-      .sort({ createdAt: -1 })
+      .sort({ productName: 1 })
       .lean();
 
     const productsWithStockStatus = products.map(

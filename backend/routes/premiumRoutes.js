@@ -3,6 +3,10 @@ const express = require("express");
 const {
   initializePremiumPayment,
   verifyPremiumPayment,
+  initializeMonthlyPremiumPayment,
+  verifyMonthlyPremiumPayment,
+  initializeSixMonthPremiumPayment,
+  verifySixMonthPremiumPayment,
   getPremiumStatus,
   paystackWebhook,
 } = require("../controllers/premiumController");
@@ -67,6 +71,29 @@ router.post(
   verifyPremiumPayment
 );
 
+router.post(
+  "/monthly/initialize",
+  allowRoles("owner"),
+  initializeMonthlyPremiumPayment
+);
+
+router.post(
+  "/monthly/verify",
+  allowRoles("owner"),
+  verifyMonthlyPremiumPayment
+);
+
+router.post(
+  "/six-month/initialize",
+  allowRoles("owner"),
+  initializeSixMonthPremiumPayment
+);
+
+router.post(
+  "/six-month/verify",
+  allowRoles("owner"),
+  verifySixMonthPremiumPayment
+);
 
 router.get(
   "/status",

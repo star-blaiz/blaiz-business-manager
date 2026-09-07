@@ -535,7 +535,7 @@ const login = async (req, res) => {
        CHECK PREMIUM EXPIRY
     ----------------------------------------- */
 
-    if (store) {
+   /* if (store) {
 
       const now =
         new Date();
@@ -565,7 +565,7 @@ const login = async (req, res) => {
        * when Premium has expired.
        */
 
-      if (
+     /* if (
         user.accountType ===
           "worker" &&
         store.plan !==
@@ -585,9 +585,110 @@ const login = async (req, res) => {
 
       }
 
+    }.....*/
+
+/* -----------------------------------------
+   CHECK PREMIUM SUBSCRIPTION
+----------------------------------------- */
+
+if (store) {
+
+  const now = new Date();
+
+  /*
+   * Subscription is the authoritative source
+   * for Premium status.
+   */
+  let subscription =
+    await Subscription.findOne({
+      storeId: store._id,
+      plan: "premium",
+      status: "active",
+    }).sort({
+      expiryDate: -1,
+    });
+
+  /*
+   * Expire subscription if its expiry date
+   * has already passed.
+   */
+  if (
+    subscription &&
+    subscription.expiryDate &&
+    new Date(subscription.expiryDate) <= now
+  ) {
+
+    subscription.status = "expired";
+
+    await subscription.save();
+
+    subscription = null;
+  }
+
+  /*
+   * Check whether there is a valid
+   * unexpired Premium subscription.
+   */
+  const premiumActive =
+    subscription &&
+    subscription.expiryDate &&
+    new Date(subscription.expiryDate) > now;
+
+  /*
+   * Synchronize Store Premium status.
+   */
+  if (premiumActive) {
+
+    store.plan = "premium";
+
+    store.subscriptionStatus = "active";
+
+    store.subscriptionStart =
+      subscription.startDate;
+
+    store.subscriptionExpiry =
+      subscription.expiryDate;
+
+    await store.save();
+
+  } else {
+
+    if (
+      store.plan === "premium" ||
+      store.subscriptionStatus === "active"
+    ) {
+
+      store.plan = "free";
+
+      store.subscriptionStatus = "expired";
+
+      await store.save();
     }
+  }
 
+  /*
+   * Workers cannot access the store
+   * when Premium has expired.
+   */
+  if (
+    user.accountType === "worker" &&
+    !premiumActive
+  ) {
 
+    return res.status(403).json({
+
+      success: false,
+
+      code:
+        "SUBSCRIPTION_REQUIRED",
+
+      message:
+        "This store's Premium subscription has expired. The owner must renew the subscription before workers can access the store.",
+    });
+
+  }
+
+}
     user.lastLogin =
       new Date();
 
