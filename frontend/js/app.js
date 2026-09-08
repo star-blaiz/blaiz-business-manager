@@ -6288,15 +6288,25 @@ async function viewReceipt(
                 }
 
 
-                <button
-                    type="button"
-                    class="primary-btn"
-                    onclick="window.blaizApp.printReceipt('${encodeURIComponent(
-                        receipt.receiptNumber
-                    )}')"
-                >
-                    Print Receipt
-                </button>
+               <button
+    type="button"
+    class="primary-btn"
+    onclick="window.blaizApp.printReceipt('${encodeURIComponent(
+        receipt.receiptNumber
+    )}')"
+>
+    Print Receipt
+</button>
+
+<button
+    type="button"
+    class="primary-btn"
+    onclick="window.blaizApp.shareReceipt('${encodeURIComponent(
+        receipt.receiptNumber
+    )}')"
+>
+    Share
+</button>
 
             </div>
 
@@ -6531,14 +6541,24 @@ function renderReceipts(receipts) {
 
 
                             <button
-                                type="button"
-                                class="primary-btn"
-                                onclick="window.blaizApp.printReceipt('${encodeURIComponent(
-                                    receipt.receiptNumber
-                                )}')"
-                            >
-                                Print
-                            </button>
+    type="button"
+    class="primary-btn"
+    onclick="window.blaizApp.printReceipt('${encodeURIComponent(
+        receipt.receiptNumber
+    )}')"
+>
+    Print
+</button>
+
+<button
+    type="button"
+    class="primary-btn"
+    onclick="window.blaizApp.shareReceipt('${encodeURIComponent(
+        receipt.receiptNumber
+    )}')"
+>
+    Share
+</button>
 
                         </div>
 
@@ -6881,9 +6901,617 @@ async function verifyReceipt() {
     }
 }
 
-/* =========================
+/*=========================
+   SHARE RECEIPT AS PDF
+=========================*/
+
+async function shareReceipt(receiptNumber) {
+
+    try {
+
+        receiptNumber =
+            decodeURIComponent(
+                receiptNumber
+            );
+
+        const result =
+            await apiRequest(
+                `/receipts/${encodeURIComponent(receiptNumber)}`,
+                {
+                    method: "GET"
+                }
+            );
+
+        const receipt =
+            result.receipt;
+
+        if (!receipt) {
+
+            showNotification(
+                "Receipt not found."
+            );
+
+            return;
+
+        }
+
+        const date =
+            receipt.date
+                ? new Date(
+                    receipt.date
+                ).toLocaleString(
+                    "en-NG"
+                )
+                : "Unknown date";
+
+
+        const itemsHtml =
+            (receipt.items || [])
+                .map(
+                    (item) => {
+
+                        const quantity =
+                            Number(
+                                item.quantity || 0
+                            );
+
+                        const unitPrice =
+                            Number(
+                                item.unitPrice || 0
+                            );
+
+                        const total =
+                            Number(
+                                item.total || 0
+                            );
+
+                        return `
+                            <tr>
+
+                                <td>
+                                    ${escapeHtml(
+                                        item.productName ||
+                                        "Unknown Product"
+                                    )}
+                                </td>
+
+                                <td>
+                                    ${quantity}
+                                </td>
+
+                                <td>
+                                    ${formatCurrency(
+                                        unitPrice
+                                    )}
+                                </td>
+
+                                <td>
+                                    ${formatCurrency(
+                                        total
+                                    )}
+                                </td>
+
+                            </tr>
+                        `;
+
+                    }
+                )
+                .join("");
+
+
+        const receiptHtml = `
+
+            <!DOCTYPE html>
+
+            <html>
+
+            <head>
+
+                <meta charset="UTF-8">
+
+                <style>
+
+                    * {
+                        box-sizing: border-box;
+                    }
+
+                    body {
+
+                        font-family:
+                            Arial,
+                            sans-serif;
+
+                        margin: 0;
+
+                        padding: 10px;
+
+                        color: #111;
+
+                        background: #fff;
+
+                    }
+
+                    .receipt {
+
+                        width: 58mm;
+
+                        margin: 0 auto;
+
+                    }
+
+                    .header {
+
+                        text-align: center;
+
+                        margin-bottom: 10px;
+
+                    }
+
+                    .header h1 {
+
+                        margin:
+                            0 0 5px;
+
+                        font-size: 16px;
+
+                    }
+
+                    .header p {
+
+                        margin: 2px 0;
+
+                        font-size: 9px;
+
+                    }
+
+                    .receipt-title {
+
+                        text-align: center;
+
+                        margin: 10px 0;
+
+                        font-size: 13px;
+
+                        font-weight: bold;
+
+                    }
+
+                    .info {
+
+                        margin-bottom: 10px;
+
+                    }
+
+                    .info p {
+
+                        margin: 4px 0;
+
+                        font-size: 9px;
+
+                    }
+
+                    table {
+
+                        width: 100%;
+
+                        border-collapse:
+                            collapse;
+
+                        font-size: 8px;
+
+                    }
+
+                    th,
+                    td {
+
+                        border-bottom:
+                            1px solid #ddd;
+
+                        padding:
+                            4px 2px;
+
+                        text-align: left;
+
+                    }
+
+                    th:nth-child(2),
+                    th:nth-child(3),
+                    th:nth-child(4),
+                    td:nth-child(2),
+                    td:nth-child(3),
+                    td:nth-child(4) {
+
+                        text-align: right;
+
+                    }
+
+                    .summary {
+
+                        margin-top: 10px;
+
+                        border-top:
+                            1px solid #111;
+
+                        padding-top: 6px;
+
+                    }
+
+                    .summary-row {
+
+                        display: flex;
+
+                        justify-content:
+                            space-between;
+
+                        padding: 3px 0;
+
+                        font-size: 9px;
+
+                    }
+
+                    .summary-row.total {
+
+                        font-size: 11px;
+
+                        font-weight: bold;
+
+                    }
+
+                    .footer {
+
+                        text-align: center;
+
+                        margin-top: 15px;
+
+                        border-top:
+                            1px solid #ddd;
+
+                        padding-top: 8px;
+
+                        font-size: 8px;
+
+                    }
+
+                </style>
+
+            </head>
+
+            <body>
+
+                <div class="receipt">
+
+                    <div class="header">
+
+                        <h1>
+                            ${escapeHtml(
+                                receipt.store?.name ||
+                                "Store"
+                            )}
+                        </h1>
+
+                        ${
+                            receipt.store?.phone
+                                ? `
+                                    <p>
+                                        ${escapeHtml(
+                                            receipt.store.phone
+                                        )}
+                                    </p>
+                                `
+                                : ""
+                        }
+
+                        ${
+                            receipt.store?.email
+                                ? `
+                                    <p>
+                                        ${escapeHtml(
+                                            receipt.store.email
+                                        )}
+                                    </p>
+                                `
+                                : ""
+                        }
+
+                        ${
+                            receipt.store?.address
+                                ? `
+                                    <p>
+                                        ${escapeHtml(
+                                            receipt.store.address
+                                        )}
+                                    </p>
+                                `
+                                : ""
+                        }
+
+                    </div>
+
+
+                    <div class="receipt-title">
+
+                        SALES RECEIPT
+
+                    </div>
+
+
+                    <div class="info">
+
+                        <p>
+                            <strong>
+                                Receipt:
+                            </strong>
+
+                            ${escapeHtml(
+                                receipt.receiptNumber ||
+                                "Not available"
+                            )}
+
+                        </p>
+
+                        <p>
+
+                            <strong>
+                                Date:
+                            </strong>
+
+                            ${escapeHtml(
+                                date
+                            )}
+
+                        </p>
+
+                        <p>
+
+                            <strong>
+                                Customer:
+                            </strong>
+
+                            ${escapeHtml(
+                                receipt.customer?.name ||
+                                "Walk-in Customer"
+                            )}
+
+                        </p>
+
+                        ${
+                            receipt.soldBy
+                                ? `
+                                    <p>
+
+                                        <strong>
+                                            Sold By:
+                                        </strong>
+
+                                        ${escapeHtml(
+                                            receipt.soldBy.name ||
+                                            "Unknown"
+                                        )}
+
+                                    </p>
+                                `
+                                : ""
+                        }
+
+                    </div>
+
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Product
+                                </th>
+
+                                <th>
+                                    Qty
+                                </th>
+
+                                <th>
+                                    Price
+                                </th>
+
+                                <th>
+                                    Total
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            ${itemsHtml}
+
+                        </tbody>
+
+                    </table>
+
+
+                    <div class="summary">
+
+                        <div class="summary-row">
+
+                            <span>
+                                Subtotal
+                            </span>
+
+                            <strong>
+                                ${formatCurrency(
+                                    Number(
+                                        receipt.subtotal || 0
+                                    )
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-row">
+
+                            <span>
+                                Discount
+                            </span>
+
+                            <strong>
+                                ${formatCurrency(
+                                    Number(
+                                        receipt.discount || 0
+                                    )
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-row total">
+
+                            <span>
+                                TOTAL
+                            </span>
+
+                            <strong>
+                                ${formatCurrency(
+                                    Number(
+                                        receipt.totalAmount || 0
+                                    )
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-row">
+
+                            <span>
+                                Amount Paid
+                            </span>
+
+                            <strong>
+                                ${formatCurrency(
+                                    Number(
+                                        receipt.amountPaid || 0
+                                    )
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-row">
+
+                            <span>
+                                Debt
+                            </span>
+
+                            <strong>
+                                ${formatCurrency(
+                                    Number(
+                                        receipt.debt || 0
+                                    )
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="summary-row">
+
+                            <span>
+                                Payment
+                            </span>
+
+                            <strong>
+                                ${escapeHtml(
+                                    formatPaymentMethod(
+                                        receipt.paymentMethod
+                                    )
+                                )}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="footer">
+
+                        Thank you for your patronage!
+
+                        <br><br>
+
+                        Powered by Blaiz Business Manager
+
+                    </div>
+
+                </div>
+
+            </body>
+
+            </html>
+
+        `;
+
+
+        /*
+         * Native Android PDF generator.
+         */
+
+        const pdfGenerator =
+            window.Capacitor?.Plugins?.PdfGenerator;
+
+        if (!pdfGenerator) {
+
+            throw new Error(
+                "PDF generator is not available in the Android app."
+            );
+
+        }
+
+
+        await pdfGenerator.fromData({
+
+            data:
+                receiptHtml,
+
+            documentSize:
+                "58mm",
+
+            orientation:
+                "portrait",
+
+            type:
+                "share",
+
+            fileName:
+                `Receipt-${receiptNumber}.pdf`
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Share receipt PDF error:",
+            error
+        );
+
+        showNotification(
+            error.message ||
+            "Unable to share receipt PDF."
+        );
+
+    }
+}
+
+/*=========================
    PRINT RECEIPT
-========================= */
+=========================*/
+
 
 async function printReceipt(receiptNumber) {
 
@@ -7514,18 +8142,26 @@ const isAndroid =
 
 if (isAndroid) {
 
+    /*
+     * Use the native Capacitor PDF Generator.
+     *
+     * The native Android share sheet will then
+     * provide available apps such as WhatsApp,
+     * Bluetooth, Xender, Quick Share, Files, etc.
+     */
+
     const pdfGenerator =
-        window.CapgoCapacitorPdfGenerator;
+        window.Capacitor?.Plugins?.PdfGenerator;
 
     if (!pdfGenerator) {
 
         throw new Error(
-            "PDF generator is not available."
+            "Native PDF generator is not available."
         );
 
     }
 
-    await pdfGenerator.PdfGenerator.fromData({
+    await pdfGenerator.fromData({
 
         data: receiptHtml,
 
@@ -10571,6 +11207,8 @@ window.blaizApp = {
     viewReceipt,
 
     printReceipt,
+
+    shareReceipt,
 
     loadWorkers,
 
