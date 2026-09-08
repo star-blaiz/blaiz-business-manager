@@ -74,56 +74,82 @@ const checkSubscription = async (req, res, next) => {
      * Subscription expiryDate is the authoritative expiry date.
      */
     const subscription = await Subscription.findOne({
-      storeId: store._id,
-      plan: "premium",
-      status: "active",
-    }).sort({
-      expiryDate: -1,
-    });
+  storeId: store._id,
+  plan: {
+    $in: [
+      "monthly",
+      "six-month",
+      "annual",
+      "premium",
+    ],
+  },
+  status: "active",
+}).sort({
+  createdAt: -1,
+});
 
-    /*
-     * If there is an active subscription whose expiry
-     * date has passed, expire it immediately.
-     */
-    if (
-      subscription &&
-      subscription.expiryDate &&
-      new Date(subscription.expiryDate) <= now
-    ) {
-      subscription.status = "expired";
-      await subscription.save();
-    }
+/*
+ * If there is an active subscription whose expiry
+ * date has passed, expire it immediately.
+ */
+if (
+  subscription &&
+  subscription.expiryDate &&
+  new Date(subscription.expiryDate) <= now
+) {
+  subscription.status = "expired";
+  await subscription.save();
+}
 
-    /*
-     * Re-check the subscription after possible expiration.
-     */
-    const validSubscription = await Subscription.findOne({
-      storeId: store._id,
-      plan: "premium",
-      status: "active",
-      expiryDate: {
-        $gt: now,
-      },
-    }).sort({
-      expiryDate: -1,
-    });
+/*
+ * Re-check for the latest valid subscription.
+ */
+const validSubscription = await Subscription.findOne({
+  storeId: store._id,
+  plan: {
+    $in: [
+      "monthly",
+      "six-month",
+      "annual",
+      "premium",
+    ],
+  },
+  status: "active",
+  expiryDate: {
+    $gt: now,
+  },
+}).sort({
+  createdAt: -1,
+});
 
-    /*
-     * Synchronize Store with the actual subscription.
-     */
-    if (validSubscription) {
-      store.plan = "premium";
-      store.subscriptionStatus = "active";
-      store.subscriptionStart = validSubscription.startDate;
-      store.subscriptionExpiry = validSubscription.expiryDate;
+/*
+ * Synchronize Store with the actual subscription.
+ */
+if (validSubscription) {
 
-      await store.save();
-    } else if (store.plan === "premium") {
-      store.plan = "free";
-      store.subscriptionStatus = "expired";
+  store.plan = "premium";
 
-      await store.save();
-    }
+  store.subscriptionStatus = "active";
+
+  store.subscriptionStart =
+    validSubscription.startDate;
+
+  store.subscriptionExpiry =
+    validSubscription.expiryDate;
+
+  await store.save();
+
+} else if (
+  store.plan === "premium" ||
+  store.subscriptionStatus === "active"
+) {
+
+  store.plan = "free";
+
+  store.subscriptionStatus = "expired";
+
+  await store.save();
+}
 
     req.store = store;
 

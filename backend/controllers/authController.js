@@ -598,19 +598,31 @@ if (store) {
   /*
    * Subscription is the authoritative source
    * for Premium status.
+   *
+   * Supports:
+   * - monthly
+   * - six-month
+   * - annual
    */
   let subscription =
     await Subscription.findOne({
       storeId: store._id,
-      plan: "premium",
+      plan: {
+        $in: [
+          "monthly",
+          "six-month",
+          "annual",
+          "premium",
+        ],
+      },
       status: "active",
     }).sort({
-      expiryDate: -1,
+      createdAt: -1,
     });
 
   /*
-   * Expire subscription if its expiry date
-   * has already passed.
+   * Expire the latest subscription if its
+   * expiry date has already passed.
    */
   if (
     subscription &&
@@ -626,7 +638,7 @@ if (store) {
   }
 
   /*
-   * Check whether there is a valid
+   * Check whether there is a valid,
    * unexpired Premium subscription.
    */
   const premiumActive =
