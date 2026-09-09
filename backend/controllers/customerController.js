@@ -3,6 +3,10 @@ const Store = require("../models/store");
 
 const { getPlanLimits } = require("../utils/planLimits");
 
+const {
+  notifyStoreUsers,
+} = require("../services/notificationService");
+
 const refreshStorePlan = async (store) => {
   const now = new Date();
 
@@ -100,6 +104,41 @@ const addCustomer = async (req, res) => {
 
       outstandingDebt: 0,
     });
+
+    /* =====================================================
+   CREATE CUSTOMER NOTIFICATION
+========================================================= */
+
+try {
+  await notifyStoreUsers({
+    storeId: store._id,
+
+    actorId: req.user._id,
+
+    category: "customer",
+
+    type: "customer_created",
+
+    title: "New Customer",
+
+    message:
+      `${req.user.name} added a new customer: ${customer.name}.`,
+
+    relatedId: customer._id,
+
+    reference: customer.phone || null,
+  });
+} catch (notificationError) {
+  /*
+   * Notification failure must NOT make
+   * an already successful customer creation fail.
+   */
+
+  console.error(
+    "Customer creation notification error:",
+    notificationError
+  );
+}
 
     return res.status(201).json({
       success: true,
@@ -240,6 +279,41 @@ const updateCustomer = async (req, res) => {
     }
 
     await customer.save();
+    
+    /* =====================================================
+   CUSTOMER UPDATED NOTIFICATION
+========================================================= */
+
+try {
+  await notifyStoreUsers({
+    storeId: customer.storeId,
+
+    actorId: req.user._id,
+
+    category: "customer",
+
+    type: "customer_updated",
+
+    title: "Customer Updated",
+
+    message:
+      `${req.user.name} updated customer: ${customer.name}.`,
+
+    relatedId: customer._id,
+
+    reference: customer.phone || null,
+  });
+} catch (notificationError) {
+  /*
+   * Notification failure must NOT make
+   * an already successful customer update fail.
+   */
+
+  console.error(
+    "Customer update notification error:",
+    notificationError
+  );
+}
 
     return res.status(200).json({
       success: true,
@@ -281,6 +355,41 @@ const deleteCustomer = async (req, res) => {
     await Customer.deleteOne({
       _id: customer._id,
     });
+
+    /* =====================================================
+   CUSTOMER DELETED NOTIFICATION
+========================================================= */
+
+try {
+  await notifyStoreUsers({
+    storeId: customer.storeId,
+
+    actorId: req.user._id,
+
+    category: "customer",
+
+    type: "customer_deleted",
+
+    title: "Customer Deleted",
+
+    message:
+      `${req.user.name} deleted customer: ${customer.name}.`,
+
+    relatedId: customer._id,
+
+    reference: customer.phone || null,
+  });
+} catch (notificationError) {
+  /*
+   * Notification failure must NOT make
+   * an already successful customer deletion fail.
+   */
+
+  console.error(
+    "Customer deletion notification error:",
+    notificationError
+  );
+}
 
     return res.status(200).json({
       success: true,

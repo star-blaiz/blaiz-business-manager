@@ -707,6 +707,15 @@
                     </span>
                 </button>
 
+                <button class="nav-item" data-page="notifications">
+    🔔
+    <span>Notifications</span>
+    <span
+        id="notificationBadge"
+        class="notification-badge hidden"
+    >0</span>
+</button>
+
 
                 <button
                     class="nav-item"
@@ -1262,6 +1271,48 @@
                 ></div>
 
             </section>
+
+
+            <!-- =========================================
+     NOTIFICATIONS PAGE
+========================================= -->
+
+<section
+    id="notificationsPage"
+    class="app-page"
+>
+
+    <div class="page-header">
+
+        <div>
+
+            <h1>
+                Notifications
+            </h1>
+
+            <p>
+                Store activity and updates
+            </p>
+
+        </div>
+
+
+        <button
+            id="markAllNotificationsReadBtn"
+            class="secondary-btn"
+        >
+            Mark all as read
+        </button>
+
+    </div>
+
+
+    <div
+        id="notificationsList"
+        class="notifications-list"
+    ></div>
+
+</section>
 
 
             <!-- SETTINGS -->

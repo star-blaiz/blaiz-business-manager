@@ -15,6 +15,9 @@ const Subscription = require("../models/subscription");
 const ActivityLog = require("../models/activitylog");
 
 const generateToken = require("../utils/generateToken");
+const {
+  notifyStoreUsers,
+} = require("../services/notificationService");
 
 
 const normalizeIdentifier = (value) => {
@@ -621,22 +624,89 @@ if (store) {
     });
 
   /*
-   * Expire the latest subscription if its
-   * expiry date has already passed.
+ * Expire the latest subscription if its
+ * expiry date has already passed.
+ */
+if (
+  subscription &&
+  subscription.expiryDate &&
+  new Date(subscription.expiryDate) <= now
+) {
+
+  /*
+   * Check that this subscription was
+   * actually active before expiring it.
    */
-  if (
-    subscription &&
-    subscription.expiryDate &&
-    new Date(subscription.expiryDate) <= now
-  ) {
 
-    subscription.status = "expired";
+  const wasActive =
+    subscription.status === "active";
 
-    await subscription.save();
 
-    subscription = null;
+  subscription.status =
+    "expired";
+
+
+  await subscription.save();
+
+
+  /* =========================================
+     PREMIUM EXPIRY NOTIFICATION
+  ========================================= */
+
+  if (wasActive) {
+
+    try {
+
+      const planName =
+        subscription.plan === "monthly"
+          ? "Monthly Premium"
+          : subscription.plan === "six-month"
+          ? "Six-Month Premium"
+          : "Annual Premium";
+
+
+      await notifyStoreUsers({
+
+        storeId:
+          store._id,
+
+        actorId:
+          store.ownerId,
+
+        category:
+          "premium",
+
+        type:
+          "premium_expired",
+
+        title:
+          "Premium Expired",
+
+        message:
+          `${planName} for your store has expired. Your store has been returned to the Free plan.`,
+
+        relatedId:
+          subscription._id,
+
+        reference:
+          subscription.paymentReference,
+
+      });
+
+    } catch (notificationError) {
+
+      console.error(
+        "Login Premium expiry notification error:",
+        notificationError
+      );
+
+    }
+
   }
 
+
+  subscription = null;
+}
   /*
    * Check whether there is a valid,
    * unexpired Premium subscription.

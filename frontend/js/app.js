@@ -663,13 +663,349 @@ if (
 
 if (
     pageName ===
+    "notifications"
+) {
+    loadNotifications();
+}
+
+if (
+    pageName ===
     "settings"
 ) {
     loadSettings();
 }
 
+    loadNotificationCount();
+    /* =========================================
+   AUTO REFRESH NOTIFICATION COUNT
+========================================= */
+
+setInterval(
+    () => {
+        loadNotificationCount();
+    },
+    10000
+);
 }
 
+/* =========================================
+   LOAD NOTIFICATIONS
+========================================= */
+
+async function loadNotifications() {
+
+    const list =
+        document.getElementById(
+            "notificationsList"
+        );
+
+    if (!list) return;
+
+
+    list.innerHTML =
+        `<div class="notification-empty">
+            Loading notifications...
+        </div>`;
+
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/notifications"
+            );
+
+
+        const notifications =
+            result.notifications || [];
+
+
+        if (!notifications.length) {
+
+            list.innerHTML =
+                `<div class="notification-empty">
+                    No notifications yet.
+                </div>`;
+
+            return;
+        }
+
+
+        list.innerHTML =
+            notifications
+                .map(
+                    (notification) => {
+
+                        const statusClass =
+                            notification.isRead
+                                ? "read"
+                                : "unread";
+
+
+                        const date =
+                            notification.createdAt
+                                ? new Date(
+                                    notification.createdAt
+                                ).toLocaleString()
+                                : "";
+
+
+                        return `
+                            <div
+                                class="notification-item ${statusClass}"
+                                data-notification-id="${notification._id}"
+                            >
+
+                                <div
+                                    class="notification-item-content"
+                                >
+
+                                    <div
+                                        class="notification-item-title"
+                                    >
+                                        ${notification.title}
+                                    </div>
+
+
+                                    <div
+                                        class="notification-item-message"
+                                    >
+                                        ${notification.message}
+                                    </div>
+
+
+                                    <div
+                                        class="notification-item-time"
+                                    >
+                                        ${date}
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        `;
+                    }
+                )
+                .join("");
+
+
+        /*
+         * Mark a notification as read
+         * when the user clicks it.
+         */
+
+        list
+            .querySelectorAll(
+                ".notification-item.unread"
+            )
+            .forEach(
+                (item) => {
+
+                    item.addEventListener(
+                        "click",
+                        async () => {
+
+                            const notificationId =
+                                item.dataset
+                                    .notificationId;
+
+
+                            try {
+
+                                await apiRequest(
+                                    `/notifications/${notificationId}/read`,
+                                    {
+                                        method: "PATCH"
+                                    }
+                                );
+
+
+                                item.classList
+                                    .remove(
+                                        "unread"
+                                    );
+
+                                item.classList
+                                    .add(
+                                        "read"
+                                    );
+                                    loadNotificationCount();
+
+
+                            } catch (error) {
+
+                                console.error(
+                                    "Mark notification as read error:",
+                                    error
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+
+    } catch (error) {
+
+        console.error(
+            "Load notifications error:",
+            error
+        );
+
+
+        list.innerHTML =
+            `<div class="notification-empty">
+                Failed to load notifications.
+            </div>`;
+
+    }
+
+}
+
+/* =========================================MARK ALL NOTIFICATIONS AS READ*======================== */
+async function markAllNotificationsAsRead() {
+
+    try {
+
+        await apiRequest(
+            "/notifications/read-all",
+            {
+                method: "PATCH"
+            }
+        );
+
+        await loadNotifications();
+
+        await loadNotificationCount();
+
+    } catch (error) {
+
+        console.error(
+            "Mark all notifications as read error:",
+            error
+        );
+
+    }
+
+}
+
+/* ========================================= MARK ALL NOTIFICATIONS AS READ BUTTON ======================== */
+const markAllNotificationsReadBtn =
+    document.getElementById(
+        "markAllNotificationsReadBtn"
+    );
+
+if (markAllNotificationsReadBtn) {
+
+    markAllNotificationsReadBtn.addEventListener(
+        "click",
+        markAllNotificationsAsRead
+    );
+
+}
+
+/* =========================================
+   LOAD NOTIFICATION COUNT
+========================================= */
+
+async function loadNotificationCount() {
+
+    const badge =
+        document.getElementById(
+            "notificationBadge"
+        );
+
+    if (!badge) return;
+
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/notifications/unread-count"
+            );
+
+
+        const unreadCount =
+            result.unreadCount || 0;
+
+            if (unreadCount > 0) {
+
+    try {
+
+        const notificationsResult =
+            await apiRequest(
+                "/notifications"
+            );
+
+        const notifications =
+            notificationsResult.notifications || [];
+
+        if (notifications.length > 0) {
+
+            const newestNotification =
+                notifications[0];
+
+            if (
+    lastNotificationId !== null &&
+    newestNotification._id !==
+        lastNotificationId
+) {
+
+                showActivityNotification(
+                    newestNotification
+                );
+
+            }
+
+            lastNotificationId =
+                newestNotification._id;
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Load latest notification error:",
+            error
+        );
+
+    }
+}
+
+
+        if (unreadCount > 0) {
+
+            badge.textContent =
+                unreadCount > 99
+                    ? "99+"
+                    : unreadCount;
+
+            badge.classList
+                .remove("hidden");
+
+        } else {
+
+            badge.textContent =
+                "0";
+
+            badge.classList
+                .add("hidden");
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Load notification count error:",
+            error
+        );
+
+    }
+
+}
 
 /* =========================
    DASHBOARD
@@ -1839,6 +2175,84 @@ function showNotification(
         );
 }
 
+/* =========================================
+   ACTIVITY NOTIFICATION POPUP
+========================================= */
+
+let lastNotificationId = null;
+
+function showActivityNotification(notification) {
+
+    if (!notification) return;
+
+    const existingPopup =
+        document.getElementById(
+            "activityNotificationPopup"
+        );
+
+    if (existingPopup) {
+        existingPopup.remove();
+    }
+
+
+    const popup =
+        document.createElement("div");
+
+    popup.id =
+        "activityNotificationPopup";
+
+    popup.className =
+        "activity-notification-popup";
+
+
+    popup.innerHTML = `
+        <div class="activity-notification-icon">
+            🔔
+        </div>
+
+        <div class="activity-notification-content">
+
+            <div class="activity-notification-title">
+                ${notification.title || "New Notification"}
+            </div>
+
+            <div class="activity-notification-message">
+                ${notification.message || ""}
+            </div>
+
+        </div>
+    `;
+
+
+    document.body.appendChild(
+        popup
+    );
+
+
+    setTimeout(() => {
+
+        popup.classList.add(
+            "show"
+        );
+
+    }, 50);
+
+
+    setTimeout(() => {
+
+        popup.classList.remove(
+            "show"
+        );
+
+        setTimeout(() => {
+
+            popup.remove();
+
+        }, 300);
+
+    }, 5000);
+
+}
 
 /* =========================
    GLOBAL ACCESS

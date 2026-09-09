@@ -6,6 +6,11 @@ const Customer = require("../models/customer");
 const Receipt = require("../models/receipt");
 const Store = require("../models/store");
 
+const {
+    notifyStoreUsers,
+} = require("../services/notificationService");
+
+
 const { getPlanLimits } = require("../utils/planLimits");
 
 
@@ -782,11 +787,59 @@ const createSale = async (req, res) => {
 
         );
 
+        /* =====================================================
+   CREATE SALE NOTIFICATION
+========================================================= */
+
+try {
+
+    await notifyStoreUsers({
+
+        storeId:
+            store._id,
+
+        actorId:
+            req.user._id,
+
+        category:
+            "sale",
+
+        type:
+            "sale_created",
+
+        title:
+            "New Sale",
+
+        message:
+            `${req.user.name} recorded a sale of ₦${totalAmount.toLocaleString()}${receiptNumber ? ` — Receipt ${receiptNumber}` : ""}.`,
+
+        relatedId:
+            createdSale._id,
+
+        reference:
+            receiptNumber,
+
+    });
+
+} catch (notificationError) {
+
+    /*
+     * Notification failure must NOT make
+     * an already successful sale fail.
+     */
+
+    console.error(
+        "Sale notification error:",
+        notificationError
+    );
+
+}
+
 
         /* =====================================================
            SUCCESS RESPONSE
         ===================================================== */
-
+       
         return res.status(201).json({
 
             success: true,

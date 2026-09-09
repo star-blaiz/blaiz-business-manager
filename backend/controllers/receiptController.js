@@ -2,6 +2,10 @@ const Receipt = require("../models/receipt");
 const Sale = require("../models/sale");
 const Store = require("../models/store");
 
+const {
+  notifyStoreUsers,
+} = require("../services/notificationService");
+
 const verifyReceipt = async (req, res) => {
   try {
     let { receiptNumber } = req.body;
@@ -55,13 +59,50 @@ console.log(
 );
 
     if (!receipt) {
-      return res.status(404).json({
-        success: false,
-        verified: false,
-        message:
-          "Receipt not found. Please check the receipt number and try again.",
-      });
-    }
+
+  /* =====================================================
+     FAILED RECEIPT VERIFICATION NOTIFICATION
+  ========================================================= */
+
+  try {
+    await notifyStoreUsers({
+      storeId: req.user.storeId,
+
+      actorId: req.user._id,
+
+      category: "verification",
+
+      type: "receipt_not_found",
+
+      title: "Receipt Verification Failed",
+
+      message:
+        `${req.user.name} attempted to verify receipt ${receiptNumber}, but the receipt was not found in your store.`,
+
+      relatedId: null,
+
+      reference: receiptNumber,
+    });
+  } catch (notificationError) {
+
+    /*
+     * Notification failure must NOT change
+     * the verification response.
+     */
+
+    console.error(
+      "Failed receipt verification notification error:",
+      notificationError
+    );
+  }
+
+  return res.status(404).json({
+    success: false,
+    verified: false,
+    message:
+      "Receipt not found. Please check the receipt number and try again.",
+  });
+}
 
     const store = await Store.findById(
       receipt.storeId
@@ -91,6 +132,41 @@ console.log(
           "Receipt record is incomplete and could not be verified.",
       });
     }
+
+    /* =====================================================
+   RECEIPT VERIFIED NOTIFICATION
+========================================================= */
+
+try {
+  await notifyStoreUsers({
+    storeId: receipt.storeId,
+
+    actorId: req.user._id,
+
+    category: "verification",
+
+    type: "receipt_verified",
+
+    title: "Receipt Verified",
+
+    message:
+      `${req.user.name} verified receipt ${receipt.receiptNumber} successfully.`,
+
+    relatedId: receipt._id,
+
+    reference: receipt.receiptNumber,
+  });
+} catch (notificationError) {
+  /*
+   * Notification failure must NOT make
+   * an already successful verification fail.
+   */
+
+  console.error(
+    "Receipt verification notification error:",
+    notificationError
+  );
+}
 
     return res.status(200).json({
       success: true,

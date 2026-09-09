@@ -2,6 +2,10 @@ const Product = require("../models/product");
 const Store = require("../models/store");
 const { getPlanLimits } = require("../utils/planLimits");
 
+const {
+  notifyStoreUsers,
+} = require("../services/notificationService");
+
 const refreshStorePlan = async (store) => {
   const now = new Date();
 
@@ -133,6 +137,41 @@ const addProduct = async (req, res) => {
 
       createdBy: req.user._id,
     });
+
+    /* =====================================================
+   PRODUCT CREATED NOTIFICATION
+========================================================= */
+
+try {
+  await notifyStoreUsers({
+    storeId: store._id,
+
+    actorId: req.user._id,
+
+    category: "product",
+
+    type: "product_created",
+
+    title: "New Product",
+
+    message:
+      `${req.user.name} added a new product: ${product.name}.`,
+
+    relatedId: product._id,
+
+    reference: product.code || null,
+  });
+} catch (notificationError) {
+  /*
+   * Notification failure must NOT make
+   * an already successful product creation fail.
+   */
+
+  console.error(
+    "Product creation notification error:",
+    notificationError
+  );
+}
 
     return res.status(201).json({
       success: true,
@@ -331,6 +370,41 @@ const updateProduct = async (req, res) => {
 
     await product.save();
 
+    /* =====================================================
+   PRODUCT UPDATED NOTIFICATION
+========================================================= */
+
+try {
+  await notifyStoreUsers({
+    storeId: product.storeId,
+
+    actorId: req.user._id,
+
+    category: "product",
+
+    type: "product_updated",
+
+    title: "Product Updated",
+
+    message:
+      `${req.user.name} updated product: ${product.name}.`,
+
+    relatedId: product._id,
+
+    reference: product.code || null,
+  });
+} catch (notificationError) {
+  /*
+   * Notification failure must NOT make
+   * an already successful product update fail.
+   */
+
+  console.error(
+    "Product update notification error:",
+    notificationError
+  );
+}
+
     return res.status(200).json({
       success: true,
       message: "Product updated successfully.",
@@ -363,6 +437,41 @@ const deleteProduct = async (req, res) => {
     await Product.deleteOne({
       _id: product._id,
     });
+
+    /* =====================================================
+   PRODUCT DELETED NOTIFICATION
+========================================================= */
+
+try {
+  await notifyStoreUsers({
+    storeId: product.storeId,
+
+    actorId: req.user._id,
+
+    category: "product",
+
+    type: "product_deleted",
+
+    title: "Product Deleted",
+
+    message:
+      `${req.user.name} deleted product: ${product.name}.`,
+
+    relatedId: product._id,
+
+    reference: product.code || null,
+  });
+} catch (notificationError) {
+  /*
+   * Notification failure must NOT make
+   * an already successful product deletion fail.
+   */
+
+  console.error(
+    "Product deletion notification error:",
+    notificationError
+  );
+}
 
     return res.status(200).json({
       success: true,
@@ -426,6 +535,91 @@ const adjustStock = async (req, res) => {
     }
 
     await product.save();
+
+    /* =====================================================
+   STOCK ADJUSTMENT NOTIFICATION
+========================================================= */
+
+try {
+  const stockAction =
+    type === "add"
+      ? "added"
+      : "removed";
+
+  await notifyStoreUsers({
+    storeId: product.storeId,
+
+    actorId: req.user._id,
+
+    category: "inventory",
+
+    type:
+      type === "add"
+        ? "stock_added"
+        : "stock_removed",
+
+    title:
+      type === "add"
+        ? "Stock Added"
+        : "Stock Removed",
+
+    message:
+      `${req.user.name} ${stockAction} ${amount} unit(s) of ${product.name}. Current stock: ${product.quantity}.`,
+
+    relatedId: product._id,
+
+    reference: product.code || null,
+  });
+} catch (notificationError) {
+  console.error(
+    "Stock adjustment notification error:",
+    notificationError
+  );
+}
+
+
+/* =====================================================
+   LOW STOCK / OUT OF STOCK NOTIFICATION
+========================================================= */
+
+if (product.quantity <= product.minimumStock) {
+  try {
+    const stockStatus =
+      product.quantity <= 0
+        ? "out of stock"
+        : "low on stock";
+
+    await notifyStoreUsers({
+      storeId: product.storeId,
+
+      actorId: req.user._id,
+
+      category: "inventory",
+
+      type:
+        product.quantity <= 0
+          ? "stock_out"
+          : "stock_low",
+
+      title:
+        product.quantity <= 0
+          ? "Product Out of Stock"
+          : "Low Stock Alert",
+
+      message:
+        `${product.name} is ${stockStatus}. Current stock: ${product.quantity}. Minimum stock level: ${product.minimumStock}.`,
+
+      relatedId: product._id,
+
+      reference: product.code || null,
+    });
+  } catch (stockNotificationError) {
+    console.error(
+      "Low stock notification error:",
+      stockNotificationError
+    );
+  }
+}
 
     return res.status(200).json({
       success: true,

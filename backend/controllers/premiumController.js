@@ -3,6 +3,9 @@ const axios = require("axios");
 
 const Store = require("../models/store");
 const Subscription = require("../models/subscription");
+const {
+  notifyStoreUsers,
+} = require("../services/notificationService");
 
 const PREMIUM_PRICE = 30000;
 const PREMIUM_DURATION_DAYS = 365;
@@ -177,11 +180,38 @@ const activatePremium = async ({
 
   await store.save();
 
+/* =====================================================
+   PREMIUM ACTIVATION NOTIFICATION
+========================================================= */
 
-  return {
-    alreadyProcessed: false,
-    subscription,
-  };
+try {
+  await notifyStoreUsers({
+    storeId: store._id,
+    actorId: store.ownerId,
+    category: "premium",
+    type: "premium_activated",
+    title: "Premium Activated",
+    message:
+      `Premium has been activated successfully for your store for ${PREMIUM_DURATION_DAYS} days.`,
+    relatedId: subscription._id,
+    reference: paymentReference,
+  });
+} catch (notificationError) {
+  /*
+   * Notification failure must NOT
+   * make Premium activation fail.
+   */
+
+  console.error(
+    "Premium activation notification error:",
+    notificationError
+  );
+}
+
+return {
+  alreadyProcessed: false,
+  subscription,
+};
 
 };
 
@@ -300,11 +330,43 @@ const expiryDate =
 
   await store.save();
 
+/* =====================================================
+   PREMIUM PLAN ACTIVATION NOTIFICATION
+========================================================= */
 
-  return {
-    alreadyProcessed: false,
-    subscription,
-  };
+try {
+  const planName =
+    plan === "monthly"
+      ? "Monthly Premium"
+      : "Six-Month Premium";
+
+  await notifyStoreUsers({
+    storeId: store._id,
+    actorId: store.ownerId,
+    category: "premium",
+    type: "premium_activated",
+    title: "Premium Activated",
+    message:
+      `${planName} has been activated successfully for your store for ${durationDays} days.`,
+    relatedId: subscription._id,
+    reference: paymentReference,
+  });
+} catch (notificationError) {
+  /*
+   * Notification failure must NOT
+   * make Premium activation fail.
+   */
+
+  console.error(
+    "Premium plan activation notification error:",
+    notificationError
+  );
+}
+
+return {
+  alreadyProcessed: false,
+  subscription,
+};
 
 };
 
@@ -2636,9 +2698,79 @@ if (
   subscriptionExpiry <= now
 ) {
 
-  subscription.status = "expired";
+  /*
+   * Check whether this subscription
+   * was active before expiring it.
+   */
+
+  const wasActive =
+    subscription.status === "active";
+
+
+  subscription.status =
+    "expired";
+
 
   await subscription.save();
+
+
+  /* =========================================
+     PREMIUM EXPIRY NOTIFICATION
+  ========================================= */
+
+  if (wasActive) {
+
+    try {
+
+      const planName =
+        subscription.plan === "monthly"
+          ? "Monthly Premium"
+          : subscription.plan === "six-month"
+          ? "Six-Month Premium"
+          : "Annual Premium";
+
+
+      await notifyStoreUsers({
+
+        storeId:
+          store._id,
+
+        actorId:
+          store.ownerId,
+
+        category:
+          "premium",
+
+        type:
+          "premium_expired",
+
+        title:
+          "Premium Expired",
+
+        message:
+          `${planName} for your store has expired. Your store has been returned to the Free plan.`,
+
+        relatedId:
+          subscription._id,
+
+        reference:
+          subscription.paymentReference,
+
+      });
+
+    } catch (notificationError) {
+
+      console.error(
+
+        "Premium expiry notification error:",
+
+        notificationError
+
+      );
+
+    }
+
+  }
 
 }
 

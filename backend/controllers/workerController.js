@@ -5,6 +5,10 @@ const Store = require("../models/store");
 
 const { getPlanLimits } = require("../utils/planLimits");
 
+const {
+  notifyStoreUsers,
+} = require("../services/notificationService");
+
 const addWorker = async (req, res) => {
   try {
     const {
@@ -135,6 +139,37 @@ const addWorker = async (req, res) => {
       status: "active",
     });
 
+    /* =====================================================
+   WORKER ADDED NOTIFICATION
+========================================================= */
+
+try {
+  await notifyStoreUsers({
+    storeId: store._id,
+    actorId: req.user._id,
+    category: "worker",
+    type: "worker_added",
+    title: "New Worker Added",
+    message:
+      `${req.user.name} added ${worker.name} as a ${worker.role} worker.`,
+    relatedId: worker._id,
+    reference:
+      worker.email ||
+      worker.phone ||
+      null,
+  });
+} catch (notificationError) {
+  /*
+   * Notification failure must NOT
+   * make worker creation fail.
+   */
+
+  console.error(
+    "Worker creation notification error:",
+    notificationError
+  );
+}
+
     return res.status(201).json({
       success: true,
       message: "Worker added successfully.",
@@ -248,6 +283,37 @@ const updateWorker = async (req, res) => {
 
     await worker.save();
 
+    /* =====================================================
+   WORKER UPDATED NOTIFICATION
+========================================================= */
+
+try {
+  await notifyStoreUsers({
+    storeId: worker.storeId,
+    actorId: req.user._id,
+    category: "worker",
+    type: "worker_updated",
+    title: "Worker Updated",
+    message:
+      `${req.user.name} updated worker ${worker.name}. Role: ${worker.role}. Status: ${worker.status}.`,
+    relatedId: worker._id,
+    reference:
+      worker.email ||
+      worker.phone ||
+      null,
+  });
+} catch (notificationError) {
+  /*
+   * Notification failure must NOT
+   * make worker update fail.
+   */
+
+  console.error(
+    "Worker update notification error:",
+    notificationError
+  );
+}
+
     return res.status(200).json({
       success: true,
       message: "Worker updated successfully.",
@@ -290,6 +356,37 @@ const deleteWorker = async (req, res) => {
     await User.deleteOne({
       _id: worker._id,
     });
+
+    /* =====================================================
+   WORKER REMOVED NOTIFICATION
+========================================================= */
+
+try {
+  await notifyStoreUsers({
+    storeId: worker.storeId,
+    actorId: req.user._id,
+    category: "worker",
+    type: "worker_deleted",
+    title: "Worker Removed",
+    message:
+      `${req.user.name} removed worker ${worker.name} from the store.`,
+    relatedId: worker._id,
+    reference:
+      worker.email ||
+      worker.phone ||
+      null,
+  });
+} catch (notificationError) {
+  /*
+   * Notification failure must NOT
+   * make worker deletion fail.
+   */
+
+  console.error(
+    "Worker deletion notification error:",
+    notificationError
+  );
+}
 
     return res.status(200).json({
       success: true,
