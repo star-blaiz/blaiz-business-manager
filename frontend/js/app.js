@@ -930,7 +930,17 @@ async function loadNotificationCount() {
 
 
         const unreadCount =
-            result.unreadCount || 0;
+    result.count || 0;
+
+    const dashboardCount =
+    document.getElementById(
+        "dashboardNotificationCount"
+    );
+
+if (dashboardCount) {
+    dashboardCount.textContent =
+        unreadCount;
+}
 
             if (unreadCount > 0) {
 
