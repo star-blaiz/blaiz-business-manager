@@ -8,6 +8,7 @@ const {
   initializeSixMonthPremiumPayment,
   verifySixMonthPremiumPayment,
   getPremiumStatus,
+  getPaymentHistory,
   paystackWebhook,
 } = require("../controllers/premiumController");
 
@@ -93,6 +94,12 @@ router.post(
   "/six-month/verify",
   allowRoles("owner"),
   verifySixMonthPremiumPayment
+);
+
+router.get(
+  "/payment-history",
+  allowRoles("owner"),
+  getPaymentHistory
 );
 
 router.get(

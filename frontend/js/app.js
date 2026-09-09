@@ -299,6 +299,7 @@ function initializeApp() {
         if (isLoggedIn()) {
 
             showApplication();
+             preloadStoreData();
 
 
             /*
@@ -504,6 +505,33 @@ function setupNavigation() {
                     const page =
                         button.dataset.page;
 
+                         /* =========================================
+           PAYMENT HISTORY — OWNER ONLY
+        ========================================= */
+
+        if (
+            page === "payment-history"
+        ) {
+
+            const user =
+                getUser();
+
+            if (
+                !user ||
+                (
+                    user.role !== "owner" &&
+                    user.accountType !== "owner"
+                )
+            ) {
+
+                showNotification(
+                    "You do not have permission to perform this action."
+                );
+
+                return;
+            }
+        }
+
                     showPage(page);
 
                     sidebar
@@ -670,6 +698,13 @@ if (
 
 if (
     pageName ===
+    "payment-history"
+) {
+    loadPaymentHistory();
+}
+
+if (
+    pageName ===
     "settings"
 ) {
     loadSettings();
@@ -686,6 +721,128 @@ setInterval(
     },
     10000
 );
+}
+
+/* =========================================
+   LOAD PAYMENT HISTORY
+========================================= */
+
+async function loadPaymentHistory() {
+
+    const list =
+        document.getElementById(
+            "paymentHistoryList"
+        );
+
+    if (!list) return;
+
+
+    list.innerHTML =
+        `<div class="notification-empty">
+            Loading payment history...
+        </div>`;
+
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/premium/payment-history",
+                {
+                    method: "GET"
+                }
+            );
+
+
+        const history =
+            result.history || [];
+
+
+        if (!history.length) {
+
+            list.innerHTML =
+                `<div class="notification-empty">
+                    No payment history found.
+                </div>`;
+
+            return;
+
+        }
+
+
+        list.innerHTML = `
+
+            <div class="payment-history-table">
+
+                <div class="payment-history-row payment-history-header">
+
+                    <div>Plan</div>
+
+                    <div>Amount</div>
+
+                    <div>Status</div>
+
+                    <div>Paystack Reference</div>
+
+                    <div>Date & Time</div>
+
+                </div>
+
+
+                ${history.map(payment => `
+
+                    <div class="payment-history-row">
+
+                        <div>
+                            ${payment.plan || "-"}
+                        </div>
+
+                        <div>
+                            ${payment.currency || "NGN"}
+                            ${Number(payment.amount || 0).toLocaleString()}
+                        </div>
+
+                        <div>
+                            ${payment.status || "-"}
+                        </div>
+
+                        <div>
+                            ${payment.paymentReference || "-"}
+                        </div>
+
+                        <div>
+                            ${
+                                payment.date
+                                    ? new Date(
+                                        payment.date
+                                    ).toLocaleString()
+                                    : "-"
+                            }
+                        </div>
+
+                    </div>
+
+                `).join("")}
+
+            </div>
+
+        `;
+
+    } catch (error) {
+
+        console.error(
+            "Load Payment History error:",
+            error
+        );
+
+
+        list.innerHTML =
+            `<div class="notification-empty">
+                Unable to load payment history.
+            </div>`;
+
+    }
+
 }
 
 /* =========================================
@@ -1061,6 +1218,42 @@ function setupDashboard() {
 
 
 /* =========================
+   PRELOAD STORE DATA
+========================= */
+
+async function preloadStoreData() {
+
+    console.log(
+        "Preloading store data..."
+    );
+
+    await Promise.allSettled([
+
+        loadProducts(),
+
+        loadSales(),
+
+        loadCustomers(),
+
+        loadReceipts(),
+
+        loadWorkers(),
+
+        loadPremium(),
+
+        loadSettings(),
+
+        loadNotifications()
+
+    ]);
+
+    console.log(
+        "Store data preload completed."
+    );
+
+}
+
+/* =========================
    LOGIN
 ========================= */
 
@@ -1145,6 +1338,7 @@ loginForm.addEventListener(
 
 
             showApplication();
+            preloadStoreData();
 
 
         } catch (error) {
@@ -5127,7 +5321,20 @@ function openNewSaleModal() {
 
 
     const productOptions =
-        availableProducts.map(
+
+    [...availableProducts]
+        .sort(
+            (a, b) =>
+                a.name.localeCompare(
+                    b.name,
+                    undefined,
+                    {
+                        sensitivity: "base"
+                    }
+                )
+        )
+        .map(
+
             (product) => {
 
                 return `
@@ -5702,14 +5909,24 @@ function setupSaleForm() {
 
 
             const productOptions =
-                products
-                    .filter(
-                        (product) =>
-                            Number(
-                                product.quantity || 0
-                            ) > 0
-                    )
-                    .map(
+    [...products]
+        .filter(
+            (product) =>
+                Number(
+                    product.quantity || 0
+                ) > 0
+        )
+        .sort(
+            (a, b) =>
+                a.name.localeCompare(
+                    b.name,
+                    undefined,
+                    {
+                        sensitivity: "base"
+                    }
+                )
+        )
+        .map(
                         (product) => {
 
                             return `
@@ -10681,9 +10898,9 @@ async function loadSettings() {
 
                 <div class="card-header">
 
-                    <h2>
+                    <h1>
                         Account Information
-                    </h2>
+                    </h1>
 
                 </div>
 
@@ -10769,9 +10986,9 @@ async function loadSettings() {
 
                 <div class="card-header">
 
-                    <h2>
+                    <br><h1>
                         Store Information
-                    </h2>
+                    </h1>
 
                 </div>
 
@@ -10892,9 +11109,9 @@ async function loadSettings() {
 
                 <div class="card-header">
 
-                    <h2>
+                 <br>   <h1>
                         Subscription
-                    </h2>
+                    </h1>
 
                 </div>
 
@@ -10941,7 +11158,7 @@ async function loadSettings() {
                                     to unlock unlimited
                                     business management.
                                 </p>
-
+<br>
                                 <button
                                     type="button"
                                     class="primary-btn"
@@ -10954,7 +11171,7 @@ async function loadSettings() {
 
                 </div>
 
-            </div>
+            </div><br>
 
 
             <!-- CHANGE PASSWORD -->
@@ -10963,9 +11180,9 @@ async function loadSettings() {
 
                 <div class="card-header">
 
-                    <h2>
+                    <h1>
                         Change Password
-                    </h2>
+                    </h1>
 
                 </div>
 
@@ -11048,9 +11265,9 @@ async function loadSettings() {
 
     <div class="card-header">
 
-        <h2>
+       <br> <h1>
             Delete Store
-        </h2>
+        </h1>
 
     </div>
 
@@ -11071,7 +11288,7 @@ async function loadSettings() {
             <strong>
                 This action cannot be undone.
             </strong>
-        </p>
+        </p><br>
 
         <button
             type="button"

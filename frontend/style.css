@@ -717,9 +717,10 @@ button {
 .danger-btn {
     border: none;
 
-    background: #ffe8e6;
+    background: rgb(168, 6, 6);
 
-    color: var(--danger);
+    color: white;
+    font-weight: 600;
 
     padding: 9px 12px;
 
@@ -1338,4 +1339,10 @@ button {
 
     }
 
+}
+
+.delete-store-header {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
 }

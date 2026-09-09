@@ -2899,6 +2899,93 @@ if (
 
   };
 
+/* =========================================
+   GET PAYMENT HISTORY
+========================================= */
+
+const getPaymentHistory = async (req, res) => {
+
+  try {
+
+    const payments =
+      await Subscription.find({
+        storeId: req.user.storeId,
+      })
+      .sort({
+        createdAt: -1,
+      })
+      .lean();
+
+    const history =
+      payments.map((payment) => {
+
+        let planName;
+
+        if (payment.plan === "monthly") {
+          planName = "Monthly";
+        } else if (payment.plan === "six-month") {
+          planName = "Six Months";
+        } else if (
+          payment.plan === "annual" ||
+          payment.plan === "premium"
+        ) {
+          planName = "Annual";
+        } else {
+          planName = payment.plan;
+        }
+
+        let statusName;
+
+        if (payment.status === "active") {
+          statusName = "Success";
+        } else if (payment.status === "pending") {
+          statusName = "Pending";
+        } else if (payment.status === "failed") {
+          statusName = "Failed";
+        } else {
+          statusName = payment.status;
+        }
+
+        return {
+          id: payment._id,
+          plan: planName,
+          amount: payment.amount,
+          currency: payment.currency,
+          status: statusName,
+          paymentReference:
+            payment.paymentReference,
+          date: payment.createdAt,
+        };
+
+      });
+
+    return res.status(200).json({
+
+      success: true,
+
+      history,
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Get Payment History error:",
+      error
+    );
+
+    return res.status(500).json({
+
+      success: false,
+
+      message:
+        "Unable to load payment history.",
+
+    });
+
+  }
+
+};
 
 /* =========================================
    EXPORTS
@@ -2906,6 +2993,8 @@ if (
 
 module.exports = {
 
+  getPaymentHistory,
+  
   initializePremiumPayment,
 
   verifyPremiumPayment,
