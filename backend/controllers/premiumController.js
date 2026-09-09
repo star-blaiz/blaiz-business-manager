@@ -139,6 +139,9 @@ const activatePremium = async ({
       status:
         "active",
 
+        paymentStatus:
+  "success",
+
       paymentReference,
 
       startDate,
@@ -288,6 +291,9 @@ const expiryDate =
 
       status:
         "active",
+
+        paymentStatus:
+        "success",
 
       paymentReference,
 
@@ -2934,17 +2940,20 @@ const getPaymentHistory = async (req, res) => {
           planName = payment.plan;
         }
 
-        let statusName;
+       let statusName;
 
-        if (payment.status === "active") {
-          statusName = "Success";
-        } else if (payment.status === "pending") {
-          statusName = "Pending";
-        } else if (payment.status === "failed") {
-          statusName = "Failed";
-        } else {
-          statusName = payment.status;
-        }
+const paymentStatus =
+  payment.paymentStatus || "success";
+
+if (paymentStatus === "success") {
+  statusName = "Success";
+} else if (paymentStatus === "pending") {
+  statusName = "Pending";
+} else if (paymentStatus === "failed") {
+  statusName = "Failed";
+} else {
+  statusName = paymentStatus;
+}
 
         return {
           id: payment._id,

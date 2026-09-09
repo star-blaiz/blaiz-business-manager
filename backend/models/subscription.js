@@ -33,6 +33,12 @@ const subscriptionSchema = new mongoose.Schema(
       default: "pending",
     },
 
+    paymentStatus: {
+  type: String,
+  enum: ["success", "pending", "failed"],
+  default: "success",
+},
+
     paymentReference: {
       type: String,
       required: true,

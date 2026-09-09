@@ -1346,3 +1346,53 @@ button {
     font-weight: 700;
     margin-bottom: 10px;
 }
+
+/* =========================================
+   PAYMENT HISTORY TABLE
+========================================= */
+
+.payment-history-table {
+    width: 100%;
+    overflow-x: auto;
+    background: var(--card-bg, #ffffff);
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.payment-history-row {
+    display: grid;
+    grid-template-columns:
+        1fr
+        1fr
+        1fr
+        2.5fr
+        1.5fr;
+
+    align-items: center;
+    min-width: 900px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.payment-history-row:last-child {
+    border-bottom: none;
+}
+
+.payment-history-row > div {
+    padding: 14px 16px;
+    word-break: break-word;
+}
+
+.payment-history-header {
+    background: #f5f7fa;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.payment-history-header > div {
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+.payment-history-row:not(.payment-history-header):hover {
+    background: #f9fafb;
+}
