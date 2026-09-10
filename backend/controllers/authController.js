@@ -591,79 +591,37 @@ const login = async (req, res) => {
     }.....*/
 
 /* -----------------------------------------
-   CHECK PREMIUM SUBSCRIPTION
+   CHECK PREMIUM EXPIRY
 ----------------------------------------- */
 
 if (store) {
 
-  const now = new Date();
-
-  /*
-   * Subscription is the authoritative source
-   * for Premium status.
-   *
-   * Supports:
-   * - monthly
-   * - six-month
-   * - annual
-   */
-  let subscription =
-    await Subscription.findOne({
-      storeId: store._id,
-      plan: {
-        $in: [
-          "monthly",
-          "six-month",
-          "annual",
-          "premium",
-        ],
-      },
-      status: "active",
-    }).sort({
-      createdAt: -1,
-    });
-
-  /*
- * Expire the latest subscription if its
- * expiry date has already passed.
- */
-if (
-  subscription &&
-  subscription.expiryDate &&
-  new Date(subscription.expiryDate) <= now
-) {
-
-  /*
-   * Check that this subscription was
-   * actually active before expiring it.
-   */
-
-  const wasActive =
-    subscription.status === "active";
+  const now =
+    new Date();
 
 
-  subscription.status =
-    "expired";
+  if (
+    store.plan ===
+      "premium" &&
+    store.subscriptionExpiry &&
+    store.subscriptionExpiry <=
+      now
+  ) {
+
+    store.plan =
+      "free";
+
+    store.subscriptionStatus =
+      "expired";
+
+    await store.save();
 
 
-  await subscription.save();
-
-
-  /* =========================================
-     PREMIUM EXPIRY NOTIFICATION
-  ========================================= */
-
-  if (wasActive) {
+    /* =========================================
+       PREMIUM EXPIRY NOTIFICATION
+    ========================================= */
 
     try {
-
-      const planName =
-        subscription.plan === "monthly"
-          ? "Monthly Premium"
-          : subscription.plan === "six-month"
-          ? "Six-Month Premium"
-          : "Annual Premium";
-
 
       await notifyStoreUsers({
 
@@ -683,13 +641,10 @@ if (
           "Premium Expired",
 
         message:
-          `${planName} for your store has expired. Your store has been returned to the Free plan.`,
-
-        relatedId:
-          subscription._id,
+          "Your store's Premium subscription has expired. Your store has been returned to the Free plan.",
 
         reference:
-          subscription.paymentReference,
+          store.lastPremiumReference || null,
 
       });
 
@@ -705,56 +660,16 @@ if (
   }
 
 
-  subscription = null;
-}
-  /*
-   * Check whether there is a valid,
-   * unexpired Premium subscription.
-   */
-  const premiumActive =
-    subscription &&
-    subscription.expiryDate &&
-    new Date(subscription.expiryDate) > now;
-
-  /*
-   * Synchronize Store Premium status.
-   */
-  if (premiumActive) {
-
-    store.plan = "premium";
-
-    store.subscriptionStatus = "active";
-
-    store.subscriptionStart =
-      subscription.startDate;
-
-    store.subscriptionExpiry =
-      subscription.expiryDate;
-
-    await store.save();
-
-  } else {
-
-    if (
-      store.plan === "premium" ||
-      store.subscriptionStatus === "active"
-    ) {
-
-      store.plan = "free";
-
-      store.subscriptionStatus = "expired";
-
-      await store.save();
-    }
-  }
-
   /*
    * Workers cannot access the store
    * when Premium has expired.
    */
+
   if (
-    user.accountType === "worker" &&
-    !premiumActive
+    user.accountType ===
+      "worker" &&
+    store.plan !==
+      "premium"
   ) {
 
     return res.status(403).json({
@@ -766,6 +681,7 @@ if (
 
       message:
         "This store's Premium subscription has expired. The owner must renew the subscription before workers can access the store.",
+
     });
 
   }
