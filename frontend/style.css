@@ -714,6 +714,19 @@ button {
     border-radius: 8px;
 }
 
+.mark-read-btn {
+    border: 1px solid var(--border);
+
+    background: #111;
+    color: white;
+    font-weight: 600;
+
+    padding: 9px 12px;
+
+    border-radius: 8px;
+}
+
+
 .danger-btn {
     border: none;
 

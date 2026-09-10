@@ -47,6 +47,7 @@ const registerOwner = async (req, res) => {
       storeEmail,
       storeAddress,
       businessType,
+       termsAccepted,
     } = req.body;
 
 
@@ -62,6 +63,14 @@ const registerOwner = async (req, res) => {
           "Name, password and store name are required.",
       });
     }
+
+    if (termsAccepted !== true) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "You must agree to the Terms of Use and Privacy Policy to create an account.",
+  });
+}
 
 
     if (!email && !phone) {
@@ -182,6 +191,21 @@ const registerOwner = async (req, res) => {
 
         status:
           "active",
+
+           /*
+     * TERMS OF USE & PRIVACY POLICY CONSENT
+     */
+    termsAccepted:
+      true,
+
+    termsAcceptedAt:
+      new Date(),
+
+    termsVersion:
+      "1.0",
+
+    privacyPolicyVersion:
+      "1.0",
       });
 
 

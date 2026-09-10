@@ -54,7 +54,32 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+     /*
+     * TERMS OF USE & PRIVACY POLICY CONSENT
+     */
+    termsAccepted: {
+      type: Boolean,
+      default: false,
+    },
+
+    termsAcceptedAt: {
+      type: Date,
+      default: null,
+    },
+
+    termsVersion: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    privacyPolicyVersion: {
+      type: String,
+      default: null,
+      trim: true,
+    },
   },
+  
   {
     timestamps: true,
   }

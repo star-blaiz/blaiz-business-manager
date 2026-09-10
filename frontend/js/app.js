@@ -1422,6 +1422,12 @@ registerForm.addEventListener(
             )
             .value;
 
+                    const termsAccepted =
+            document.getElementById(
+                "registerTermsAccepted"
+            )
+            .checked;
+
         const message =
             document.getElementById(
                 "registerMessage"
@@ -1455,6 +1461,12 @@ registerForm.addEventListener(
             return;
         }
 
+        if (!termsAccepted) {
+    message.textContent =
+        "You must agree to the Terms of Use and Privacy Policy to create an account.";
+    return;
+}
+
 
         button.disabled =
             true;
@@ -1473,7 +1485,8 @@ registerForm.addEventListener(
                 storeName,
                 email,
                 phone,
-                password
+                password,
+                 termsAccepted
             });
 
             showNotification(
