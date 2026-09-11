@@ -210,6 +210,16 @@ const showLoginBtn =
         "showLoginBtn"
     );
 
+    const showAgentRegisterBtn =
+    document.getElementById(
+        "showAgentRegisterBtn"
+    );
+
+const backToStoreRegisterBtn =
+    document.getElementById(
+        "backToStoreRegisterBtn"
+    );
+
 const logoutBtn =
     document.getElementById(
         "logoutBtn"
@@ -356,27 +366,34 @@ function showAuthentication() {
 
 function showLoginPage() {
 
+    document
+        .querySelectorAll(".auth-page")
+        .forEach((page) => {
+
+            page.classList.add("hidden");
+
+        });
+
     loginPage
         .classList
         .remove("hidden");
-
-    registerPage
-        .classList
-        .add("hidden");
 }
 
 
 function showRegisterPage() {
 
-    loginPage
-        .classList
-        .add("hidden");
+    document
+        .querySelectorAll(".auth-page")
+        .forEach((page) => {
+
+            page.classList.add("hidden");
+
+        });
 
     registerPage
         .classList
         .remove("hidden");
 }
-
 
 /* =========================
    APPLICATION DISPLAY
@@ -1515,6 +1532,418 @@ registerForm.addEventListener(
     }
 );
 
+/* =========================
+   AGENT REGISTRATION
+========================= */
+
+const agentRegisterForm =
+    document.getElementById(
+        "agentRegisterForm"
+    );
+
+const agentPassword =
+    document.getElementById(
+        "agentPassword"
+    );
+
+const agentConfirmPassword =
+    document.getElementById(
+        "agentConfirmPassword"
+    );
+
+const agentPasswordToggle =
+    document.getElementById(
+        "agentPasswordToggle"
+    );
+
+const agentConfirmPasswordToggle =
+    document.getElementById(
+        "agentConfirmPasswordToggle"
+    );
+
+
+/* =========================
+   AGENT PASSWORD TOGGLES
+========================= */
+
+agentPasswordToggle.addEventListener(
+    "click",
+    () => {
+
+        if (
+            agentPassword.type ===
+            "password"
+        ) {
+
+            agentPassword.type =
+                "text";
+
+            agentPasswordToggle.textContent =
+                "👁";
+
+            agentPasswordToggle.setAttribute(
+                "aria-label",
+                "Hide password"
+            );
+
+        } else {
+
+            agentPassword.type =
+                "password";
+
+            agentPasswordToggle.textContent =
+                "👁̸";
+
+            agentPasswordToggle.setAttribute(
+                "aria-label",
+                "Show password"
+            );
+        }
+    }
+);
+
+
+agentConfirmPasswordToggle.addEventListener(
+    "click",
+    () => {
+
+        if (
+            agentConfirmPassword.type ===
+            "password"
+        ) {
+
+            agentConfirmPassword.type =
+                "text";
+
+            agentConfirmPasswordToggle.textContent =
+                "👁";
+
+            agentConfirmPasswordToggle.setAttribute(
+                "aria-label",
+                "Hide confirm password"
+            );
+
+        } else {
+
+            agentConfirmPassword.type =
+                "password";
+
+            agentConfirmPasswordToggle.textContent =
+                "👁̸";
+
+            agentConfirmPasswordToggle.setAttribute(
+                "aria-label",
+                "Show confirm password"
+            );
+        }
+    }
+);
+
+
+/* =========================
+   AGENT REGISTRATION SUBMIT
+========================= */
+
+agentRegisterForm.addEventListener(
+    "submit",
+    async (event) => {
+
+        event.preventDefault();
+
+
+        const fullName =
+            document.getElementById(
+                "agentFullName"
+            )
+            .value
+            .trim();
+
+
+        const nameKnownToPeople =
+            document.getElementById(
+                "agentNameKnownToPeople"
+            )
+            .value
+            .trim();
+
+
+        const nin =
+            document.getElementById(
+                "agentNIN"
+            )
+            .value
+            .trim();
+
+
+        const dateOfBirth =
+            document.getElementById(
+                "agentDateOfBirth"
+            )
+            .value;
+
+
+        const gender =
+            document.getElementById(
+                "agentGender"
+            )
+            .value;
+
+
+        const relationshipStatus =
+            document.getElementById(
+                "agentRelationshipStatus"
+            )
+            .value;
+
+
+        const phone =
+            document.getElementById(
+                "agentPhone"
+            )
+            .value
+            .trim();
+
+
+        const email =
+            document.getElementById(
+                "agentEmail"
+            )
+            .value
+            .trim();
+
+
+        const currentAddress =
+            document.getElementById(
+                "agentCurrentAddress"
+            )
+            .value
+            .trim();
+
+
+        const state =
+            document.getElementById(
+                "agentState"
+            )
+            .value
+            .trim();
+
+
+        const lga =
+            document.getElementById(
+                "agentLGA"
+            )
+            .value
+            .trim();
+
+
+        const homeAddress =
+            document.getElementById(
+                "agentHomeAddress"
+            )
+            .value
+            .trim();
+
+
+        const password =
+            agentPassword.value;
+
+
+        const confirmPassword =
+            agentConfirmPassword.value;
+
+
+        const termsAccepted =
+            document.getElementById(
+                "agentTermsAccepted"
+            )
+            .checked;
+
+
+        const message =
+            document.getElementById(
+                "agentRegisterMessage"
+            );
+
+
+        const button =
+            document.getElementById(
+                "agentRegisterButton"
+            );
+
+
+        /* =========================
+           CLIENT VALIDATION
+        ========================= */
+
+        if (
+            password !==
+            confirmPassword
+        ) {
+
+            message.textContent =
+                "Passwords do not match.";
+
+            return;
+        }
+
+
+        if (
+            password.length < 8
+        ) {
+
+            message.textContent =
+                "Password must be at least 8 characters.";
+
+            return;
+        }
+
+
+        if (!termsAccepted) {
+
+            message.textContent =
+                "You must agree to the Terms of Use and Privacy Policy to apply as an Agent.";
+
+            return;
+        }
+
+
+        button.disabled =
+            true;
+
+        button.textContent =
+            "Submitting...";
+
+        message.textContent =
+            "";
+
+
+        try {
+
+            const result =
+                await apiRequest(
+                    "/agents/register",
+                    {
+                        method: "POST",
+
+                        body:
+                            JSON.stringify({
+                                fullName,
+                                nameKnownToPeople,
+                                nin,
+                                dateOfBirth,
+                                gender,
+                                relationshipStatus,
+                                phone,
+                                email,
+                                currentAddress,
+                                state,
+                                lga,
+                                homeAddress,
+                                password,
+                                confirmPassword,
+                                termsAccepted
+                            })
+                    }
+                );
+
+
+            openModal(`
+                <div
+                    style="
+                        text-align:center;
+                        padding:20px 10px;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-size:48px;
+                            margin-bottom:15px;
+                        "
+                    >
+                        ✓
+                    </div>
+
+                    <h2>
+                        Application Submitted
+                    </h2>
+
+                    <p
+                        style="
+                            margin-top:15px;
+                            line-height:1.6;
+                        "
+                    >
+                        Application submitted successfully.
+                        Your request has been sent to the
+                        admin for review and approval.
+                        Approval usually takes 2–5 days.
+                    </p>
+
+                    <button
+                        type="button"
+                        class="primary-btn"
+                        style="
+                            margin-top:20px;
+                            width:100%;
+                        "
+                        onclick="window.blaizApp.closeModal()"
+                    >
+                        OK
+                    </button>
+
+                </div>
+            `);
+
+
+            agentRegisterForm.reset();
+
+
+            agentPassword.type =
+                "password";
+
+            agentConfirmPassword.type =
+                "password";
+
+            agentPasswordToggle.textContent =
+                "👁";
+
+            agentConfirmPasswordToggle.textContent =
+                "👁";
+
+            agentPasswordToggle.setAttribute(
+                "aria-label",
+                "Show password"
+            );
+
+            agentConfirmPasswordToggle.setAttribute(
+                "aria-label",
+                "Show confirm password"
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Agent registration error:",
+                error
+            );
+
+
+            message.textContent =
+                error.message ||
+                "Unable to submit Agent application.";
+
+        } finally {
+
+            button.disabled =
+                false;
+
+            button.textContent =
+                "Apply as an Agent";
+        }
+    }
+);
 
 /* =========================
    SWITCH AUTH PAGES
@@ -1534,6 +1963,49 @@ showLoginBtn.addEventListener(
     () => {
 
         showLoginPage();
+    }
+);
+
+/* =========================
+   AGENT REGISTRATION PAGE
+========================= */
+
+showAgentRegisterBtn.addEventListener(
+    "click",
+    () => {
+
+        document
+            .querySelectorAll(
+                ".auth-page"
+            )
+            .forEach(
+                (page) => {
+
+                    page.classList.add(
+                        "hidden"
+                    );
+
+                }
+            );
+
+        document
+            .getElementById(
+                "agentRegisterPage"
+            )
+            .classList.remove(
+                "hidden"
+            );
+
+    }
+);
+
+
+backToStoreRegisterBtn.addEventListener(
+    "click",
+    () => {
+
+        showLoginPage();
+
     }
 );
 

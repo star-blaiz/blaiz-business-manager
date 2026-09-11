@@ -610,15 +610,475 @@
                     >
                         Login
                     </button>
+                    
+                </div>
+
+                <div class="auth-switch">
+
+    Want to become a Blaiz Agent?
+
+    <button
+        id="showAgentRegisterBtn"
+        class="text-btn"
+        type="button"
+    >
+        Apply as an Agent
+    </button>
+
+</div>
+
+            </div>
+
+        </section>
+
+            <!-- =========================
+             AGENT REGISTRATION
+        ========================== -->
+
+        <section
+            id="agentRegisterPage"
+            class="auth-page hidden"
+        >
+
+            <div class="auth-card">
+
+                <img
+                    src="./assets/blaiz-log.jpg"
+                    alt="Blaiz"
+                    class="auth-logo"
+                >
+
+                <h1>
+                    Become a Blaiz Agent
+                </h1>
+
+                <p class="auth-subtitle">
+                    Apply to become a Blaiz Business Manager Agent
+                </p>
+
+
+                <!-- IMPORTANT NIN / DOB NOTICE -->
+
+                <div class="agent-important-notice">
+
+                    <strong>
+                        Important:
+                    </strong>
+
+                    The name and date of birth you provide must
+                    match the information associated with your NIN.
+
+                </div>
+
+
+                <br><form id="agentRegisterForm">
+
+
+                    <!-- FULL NAME -->
+
+                    <div class="input-group">
+
+                        <label>
+                            Full Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="agentFullName"
+                            placeholder="Enter your full name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- NAME KNOWN TO PEOPLE -->
+
+                    <div class="input-group">
+
+                        <label>
+                            Name Known To People
+                        </label>
+
+                        <input
+                            type="text"
+                            id="agentNameKnownToPeople"
+                            placeholder="Enter the name people know you by"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- NIN -->
+
+                    <div class="input-group">
+
+                        <label>
+                            NIN
+                        </label>
+
+                        <input
+                            type="text"
+                            id="agentNIN"
+                            placeholder="Enter your NIN"
+                            inputmode="numeric"
+                            maxlength="11"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- DATE OF BIRTH -->
+
+                    <div class="input-group">
+
+                        <label>
+                            Date of Birth
+                        </label>
+
+                        <input
+                            type="date"
+                            id="agentDateOfBirth"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- GENDER -->
+
+                    <div class="input-group">
+
+                        <label>
+                            Gender
+                        </label>
+
+                        <select
+                            id="agentGender"
+                            required
+                        >
+
+                            <option
+                                value=""
+                                disabled
+                                selected
+                            >
+                                Select gender
+                            </option>
+
+                            <option value="Male">
+                                Male
+                            </option>
+
+                            <option value="Female">
+                                Female
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- RELATIONSHIP STATUS -->
+
+                    <div class="input-group">
+
+                        <label>
+                            Relationship Status
+                        </label>
+
+                        <select
+                            id="agentRelationshipStatus"
+                            required
+                        >
+
+                            <option
+                                value=""
+                                disabled
+                                selected
+                            >
+                                Select relationship status
+                            </option>
+
+                            <option value="Single">
+                                Single
+                            </option>
+
+                            <option value="Married">
+                                Married
+                            </option>
+
+                            <option value="Divorced">
+                                Divorced
+                            </option>
+
+                            <option value="Widowed">
+                                Widowed
+                            </option>
+
+                            <option value="Separated">
+                                Separated
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- PHONE -->
+
+                    <div class="input-group">
+
+                        <label>
+                            Active Phone Number
+                        </label>
+
+                        <input
+                            type="tel"
+                            id="agentPhone"
+                            placeholder="Enter your active phone number"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="input-group">
+
+                        <label>
+                            Active Email Address
+                        </label>
+
+                        <input
+                            type="email"
+                            id="agentEmail"
+                            placeholder="Enter your active email address"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- CURRENT ADDRESS -->
+
+                    <div class="input-group">
+
+                        <label>
+                            Current Address
+                        </label>
+
+                        <input
+                            type="text"
+                            id="agentCurrentAddress"
+                            placeholder="Enter your current address"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- STATE -->
+
+                    <div class="input-group">
+
+                        <label>
+                            State
+                        </label>
+
+                        <input
+                            type="text"
+                            id="agentState"
+                            placeholder="Enter your state"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- LGA -->
+
+                    <div class="input-group">
+
+                        <label>
+                            LGA
+                        </label>
+
+                        <input
+                            type="text"
+                            id="agentLGA"
+                            placeholder="Enter your LGA"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- HOME ADDRESS -->
+
+                    <div class="input-group">
+
+                        <label>
+                            Home Address
+                        </label>
+
+                        <input
+                            type="text"
+                            id="agentHomeAddress"
+                            placeholder="Enter your home address"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="input-group">
+
+                        <label>
+                            Password
+                        </label>
+
+                        <div class="password-input-wrapper">
+
+                            <input
+                                type="password"
+                                id="agentPassword"
+                                placeholder="Create a password"
+                                minlength="8"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="agentPasswordToggle"
+                                aria-label="Show password"
+                            >
+                                👁
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CONFIRM PASSWORD -->
+
+                    <div class="input-group">
+
+                        <label>
+                            Confirm Password
+                        </label>
+
+                        <div class="password-input-wrapper">
+
+                            <input
+                                type="password"
+                                id="agentConfirmPassword"
+                                placeholder="Confirm your password"
+                                minlength="8"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="agentConfirmPasswordToggle"
+                                aria-label="Show confirm password"
+                            >
+                                👁
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- TERMS AND PRIVACY -->
+
+                    <div class="terms-consent">
+
+                        <label>
+
+                            <input
+                                type="checkbox"
+                                id="agentTermsAccepted"
+                            >
+
+                            <span>
+
+                                I agree to the
+
+                                <a
+                                    href="./terms.html"
+                                    target="_blank"
+                                >
+                                    Terms of Use
+                                </a>
+
+                                and
+
+                                <a
+                                    href="./privacy.html"
+                                    target="_blank"
+                                >
+                                    Privacy Policy
+                                </a>.
+
+                            </span>
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- MESSAGE -->
+
+                    <p
+                        id="agentRegisterMessage"
+                        class="form-message"
+                    ></p>
+
+
+                    <!-- SUBMIT -->
+
+                    <button
+                        type="submit"
+                        class="primary-btn"
+                        id="agentRegisterButton"
+                    >
+                        Apply as an Agent
+                    </button>
+
+
+                </form>
+
+
+                <!-- BACK -->
+
+                <div class="auth-switch">
+
+                    Already have a Blaiz agent account?
+
+                    <button
+                        id="backToStoreRegisterBtn"
+                        class="text-btn"
+                        type="button"
+                    >
+                        Login
+                    </button>
 
                 </div>
 
             </div>
 
         </section>
-
-    </main>
-
+</main>
 
     <!-- =========================
          MAIN APPLICATION

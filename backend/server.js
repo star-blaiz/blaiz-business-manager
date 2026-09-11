@@ -18,6 +18,7 @@ const {
 } = require("./controllers/premiumController");
 const settingsRoutes = require("./routes/settingsRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const agentRoutes = require("./routes/agentRoutes");
 
 const app = express();
 
@@ -81,6 +82,7 @@ app.post(
 );
 app.use("/api/settings", settingsRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/agents", agentRoutes);
 
 const startServer = async () => {
   await connectDatabase();
