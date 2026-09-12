@@ -28,13 +28,13 @@ const userSchema = new mongoose.Schema(
 
     accountType: {
       type: String,
-      enum: ["owner", "worker"],
+      enum: ["owner", "worker", "admin","superadmin",],
       required: true,
     },
 
     role: {
       type: String,
-      enum: ["owner", "sales", "inventory"],
+      enum: ["owner", "sales", "inventory", "admin", "superadmin"],
       required: true,
     },
 

@@ -959,7 +959,20 @@
                                 id="agentPasswordToggle"
                                 aria-label="Show password"
                             >
-                                👁
+                                <svg
+    class="eye-icon"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+>
+    <path
+        d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+    ></path>
+    <circle
+        cx="12"
+        cy="12"
+        r="3"
+    ></circle>
+</svg>
                             </button>
 
                         </div>
@@ -991,7 +1004,20 @@
                                 id="agentConfirmPasswordToggle"
                                 aria-label="Show confirm password"
                             >
-                                👁
+                                <svg
+    class="eye-icon"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+>
+    <path
+        d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+    ></path>
+    <circle
+        cx="12"
+        cy="12"
+        r="3"
+    ></circle>
+</svg>
                             </button>
 
                         </div>
@@ -1893,6 +1919,640 @@
 
     </div>
 
+<!-- =========================
+     AGENT DASHBOARD
+========================== -->
+
+<div
+    id="agentDashboardContainer"
+    class="app-container hidden"
+>
+
+    <!-- AGENT SIDEBAR -->
+
+    <aside
+        id="agentSidebar"
+        class="sidebar"
+    >
+
+        <div class="sidebar-header">
+
+            <div class="sidebar-logo">
+                BLAIZ
+            </div>
+
+            <div class="sidebar-subtitle">
+                Agent
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <button
+                class="nav-item active"
+                data-agent-page="dashboard"
+            >
+                🏠
+                <span>
+                    Dashboard
+                </span>
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-agent-page="stores"
+            >
+                🏪
+                <span>
+                    My Stores
+                </span>
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-agent-page="earnings"
+            >
+                💰
+                <span>
+                    Earnings
+                </span>
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-agent-page="notifications"
+            >
+                🔔
+                <span>
+                    Notifications
+                </span>
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-agent-page="account"
+            >
+                👤
+                <span>
+                    Account
+                </span>
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-agent-page="support"
+            >
+                🛟
+                <span>
+                    Support
+                </span>
+            </button>
+
+        </nav>
+
+
+        <button
+            id="agentLogoutBtn"
+            class="logout-btn"
+            type="button"
+        >
+            🚪
+            <span>
+                Logout
+            </span>
+        </button>
+
+    </aside>
+
+
+    <!-- AGENT MAIN CONTENT -->
+
+    <main class="app-main">
+
+        <!-- AGENT TOPBAR -->
+
+        <header class="topbar">
+
+            <button
+                id="agentMenuBtn"
+                class="menu-btn"
+                type="button"
+            >
+                ☰
+            </button>
+
+
+            <div class="topbar-store">
+
+                <span id="agentTopbarTitle">
+                    Agent Dashboard
+                </span>
+
+            </div>
+
+
+            <div class="topbar-user">
+
+                <div
+                    id="agentUserAvatar"
+                    class="user-avatar"
+                >
+                    A
+                </div>
+
+                <div>
+
+                    <strong id="agentTopbarName">
+                        Agent
+                    </strong>
+
+                    <span>
+                        Agent
+                    </span>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- AGENT DASHBOARD PAGE -->
+
+        <section
+            id="agentDashboardPage"
+            class="app-page active-page"
+        >
+
+            <div class="page-header">
+
+                <div>
+
+                    <h1>
+                        Agent Dashboard
+                    </h1>
+
+                    <p id="agentDashboardGreeting">
+                        Welcome back.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-card-icon">
+                        🏪
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Referred Stores
+                        </span>
+
+                        <strong
+                            id="agentReferredStoresCount"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-card-icon">
+                        ⭐
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Premium Stores
+                        </span>
+
+                        <strong
+                            id="agentPremiumStoresCount"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-card-icon">
+                        💰
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Total Earnings
+                        </span>
+
+                        <strong
+                            id="agentTotalEarnings"
+                        >
+                            ₦0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-card-icon">
+                        📈
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Pending Commission
+                        </span>
+
+                        <strong
+                            id="agentPendingCommission"
+                        >
+                            ₦0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- REFERRAL SECTION -->
+
+            <div class="content-card">
+
+                <h2>
+                    Your Referral
+                </h2>
+
+                <p>
+                    Share your referral information to bring
+                    new stores to Blaiz Business Manager.
+                </p>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Referral Code
+                    </label>
+
+                    <div
+                        id="agentReferralCode"
+                        class="form-input"
+                    >
+                        Loading...
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Referral Link
+                    </label>
+
+                    <div
+                        id="agentReferralLink"
+                        class="form-input"
+                    >
+                        Loading...
+                    </div>
+
+                </div>
+
+
+                <div
+                    style="
+                        display:flex;
+                        gap:10px;
+                        flex-wrap:wrap;
+                        margin-top:15px;
+                    "
+                >
+
+                    <button
+                        id="agentCopyReferralBtn"
+                        class="primary-btn"
+                        type="button"
+                    >
+                        Copy Referral
+                    </button>
+
+
+                    <button
+                        id="agentShareReferralBtn"
+                        class="secondary-btn"
+                        type="button"
+                    >
+                        Share Referral
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- RECENT REFERRALS -->
+
+            <div class="content-card">
+
+                <div
+                    style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        gap:10px;
+                        flex-wrap:wrap;
+                    "
+                >
+
+                    <h2>
+                        Recent Referred Stores
+                    </h2>
+
+                    <button
+                        class="text-btn"
+                        type="button"
+                        data-agent-page="stores"
+                    >
+                        View All
+                    </button>
+
+                </div>
+
+
+                <div
+                    id="agentRecentStoresList"
+                >
+
+                    <div class="notification-empty">
+                        No referred stores yet.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- MY STORES PAGE -->
+
+        <section
+            id="agentStoresPage"
+            class="app-page"
+        >
+
+            <div class="page-header">
+
+                <div>
+
+                    <h1>
+                        My Stores
+                    </h1>
+
+                    <p>
+                        Stores referred by you.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="agentStoresList"
+                class="content-card"
+            >
+
+                <div class="notification-empty">
+                    Loading referred stores...
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- EARNINGS PAGE -->
+
+        <section
+            id="agentEarningsPage"
+            class="app-page"
+        >
+
+            <div class="page-header">
+
+                <div>
+
+                    <h1>
+                        Earnings
+                    </h1>
+
+                    <p>
+                        Track your commissions and earnings.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="agentEarningsContent"
+                class="content-card"
+            >
+
+                <div class="notification-empty">
+                    Loading earnings...
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- NOTIFICATIONS PAGE -->
+
+        <section
+            id="agentNotificationsPage"
+            class="app-page"
+        >
+
+            <div class="page-header">
+
+                <div>
+
+                    <h1>
+                        Notifications
+                    </h1>
+
+                    <p>
+                        Stay updated on your Agent activities.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="agentNotificationsList"
+                class="content-card"
+            >
+
+                <div class="notification-empty">
+                    No notifications yet.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ACCOUNT PAGE -->
+
+        <section
+            id="agentAccountPage"
+            class="app-page"
+        >
+
+            <div class="page-header">
+
+                <div>
+
+                    <h1>
+                        Account
+                    </h1>
+
+                    <p>
+                        Manage your Agent account.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="content-card">
+
+                <h2>
+                    Profile
+                </h2>
+
+                <div id="agentProfileDetails">
+                    Loading profile...
+                </div>
+
+            </div>
+
+
+            <div class="content-card">
+
+                <h2>
+                    Bank Account
+                </h2>
+
+                <p>
+                    Add or update the bank account where
+                    your commissions will be paid.
+                </p>
+
+
+                <button
+                    id="agentBankAccountBtn"
+                    class="primary-btn"
+                    type="button"
+                >
+                    Manage Bank Account
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- SUPPORT PAGE -->
+
+        <section
+            id="agentSupportPage"
+            class="app-page"
+        >
+
+            <div class="page-header">
+
+                <div>
+
+                    <h1>
+                        Support
+                    </h1>
+
+                    <p>
+                        Get help or report an issue.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="content-card">
+
+                <h2>
+                    Agent Support
+                </h2>
+
+                <p>
+                    Contact Blaiz support for assistance with
+                    your Agent account, referrals, commissions,
+                    or other issues.
+                </p>
+
+
+                <button
+                    id="agentReportIssueBtn"
+                    class="primary-btn"
+                    type="button"
+                >
+                    Report an Issue
+                </button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
 
     <!-- =========================
          MODAL

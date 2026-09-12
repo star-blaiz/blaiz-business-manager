@@ -1409,3 +1409,73 @@ button {
 .payment-history-row:not(.payment-history-header):hover {
     background: #f9fafb;
 }
+
+/* =========================================
+   PASSWORD EYE TOGGLE
+   ========================================= */
+
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-input-wrapper input {
+    width: 100%;
+    padding-right: 45px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    border: none;
+    background: transparent;
+
+    padding: 0;
+    margin: 0;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 2;
+}
+
+/* =========================================
+   PASSWORD EYE ICON
+   ========================================= */
+
+.eye-icon {
+    width: 21px;
+    height: 21px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Slash across the eye when password is hidden */
+
+.password-toggle.password-hidden {
+    position: absolute;
+}
+
+.password-toggle.password-hidden::after {
+    content: "";
+    position: absolute;
+    width: 25px;
+    height: 2px;
+    background: currentColor;
+    transform: rotate(-45deg);
+    left: 50%;
+    top: 50%;
+    margin-left: -12px;
+    margin-top: -1px;
+    z-index: 3;
+}

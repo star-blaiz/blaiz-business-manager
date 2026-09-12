@@ -6,6 +6,7 @@ const PasswordReset = require("../models/passwordReset");
 const sendEmail = require("../config/email");
 
 const User = require("../models/user");
+const Agent = require("../models/agent");
 const Store = require("../models/store");
 const Product = require("../models/product");
 const Customer = require("../models/customer");
@@ -15,6 +16,8 @@ const Subscription = require("../models/subscription");
 const ActivityLog = require("../models/activitylog");
 
 const generateToken = require("../utils/generateToken");
+const generateAgentToken =
+  require("../utils/generateAgentToken");
 const {
   notifyStoreUsers,
 } = require("../services/notificationService");
@@ -147,6 +150,34 @@ const registerOwner = async (req, res) => {
         message:
           "An account with these details already exists.",
       });
+
+    }
+
+        /* -----------------------------------------
+       CHECK AGENT EMAIL
+       
+       Email must be unique across
+       Users and Agents.
+
+       Phone numbers may be shared.
+    ----------------------------------------- */
+
+    if (normalizedEmail) {
+
+      const existingAgent =
+        await Agent.findOne({
+          email: normalizedEmail,
+        });
+
+      if (existingAgent) {
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "An account with this email already exists. Please use a different email address.",
+        });
+
+      }
 
     }
 
@@ -486,15 +517,214 @@ const login = async (req, res) => {
 
     if (!user) {
 
-      return res.status(401).json({
+  /* =========================================
+     CHECK AGENT ACCOUNT
+  ========================================= */
 
-        success: false,
+  const agent =
+    await Agent.findOne({
 
-        message:
-          "Invalid login details or password.",
-      });
+      $or: [
 
-    }
+        {
+          email:
+            normalizedIdentifier,
+        },
+
+        {
+          phone:
+            identifier.trim(),
+        },
+
+      ],
+
+    });
+
+    console.log("AGENT LOGIN CHECK:", {
+  identifier: normalizedIdentifier,
+  agentFound: !!agent,
+  agentEmail: agent ? agent.email : null,
+  agentStatus: agent ? agent.status : null,
+  applicationStatus: agent
+    ? agent.applicationStatus
+    : null,
+});
+
+
+  if (!agent) {
+
+    return res.status(401).json({
+
+      success: false,
+
+      message:
+        "Invalid login details or password.",
+
+    });
+
+  }
+
+
+  /* -----------------------------------------
+     CHECK AGENT PASSWORD
+  ----------------------------------------- */
+
+  const agentPasswordMatch =
+    await bcrypt.compare(
+      password,
+      agent.passwordHash
+    );
+
+    console.log(
+  "AGENT PASSWORD CHECK:",
+  agentPasswordMatch
+);
+
+
+  if (!agentPasswordMatch) {
+
+    return res.status(401).json({
+
+      success: false,
+
+      message:
+        "Invalid login details or password.",
+
+    });
+
+  }
+
+
+  /* -----------------------------------------
+     CHECK APPLICATION STATUS
+  ----------------------------------------- */
+
+  if (
+    agent.applicationStatus ===
+    "pending"
+  ) {
+
+    return res.status(403).json({
+
+      success: false,
+
+      code:
+        "AGENT_APPLICATION_PENDING",
+
+      message:
+        "Your Agent application is still awaiting approval.",
+
+    });
+
+  }
+
+
+  if (
+    agent.applicationStatus ===
+    "rejected"
+  ) {
+
+    return res.status(403).json({
+
+      success: false,
+
+      code:
+        "AGENT_APPLICATION_REJECTED",
+
+      message:
+        "Your Agent application was rejected.",
+
+      rejectionReason:
+        agent.rejectionReason || null,
+
+    });
+
+  }
+
+
+  /* -----------------------------------------
+     CHECK AGENT ACCOUNT STATUS
+  ----------------------------------------- */
+
+  if (
+    agent.status !==
+    "active"
+  ) {
+
+    return res.status(403).json({
+
+      success: false,
+
+      message:
+        "Your Agent account is currently inactive.",
+
+    });
+
+  }
+
+
+  /* -----------------------------------------
+     UPDATE LAST LOGIN
+  ----------------------------------------- */
+
+  agent.lastLogin =
+    new Date();
+
+  await agent.save();
+
+
+  /* -----------------------------------------
+     CREATE AGENT TOKEN
+  ----------------------------------------- */
+
+  const token =
+    generateAgentToken(agent);
+
+
+  /* -----------------------------------------
+     AGENT LOGIN SUCCESS
+  ----------------------------------------- */
+
+  return res.status(200).json({
+
+    success: true,
+
+    message:
+      "Login successful.",
+
+    token,
+
+    user: {
+
+      id:
+        agent._id,
+
+      name:
+        agent.fullName,
+
+      email:
+        agent.email,
+
+      phone:
+        agent.phone,
+
+      accountType:
+        "agent",
+
+      role:
+        "agent",
+
+      storeId:
+        null,
+
+    },
+
+    store:
+      null,
+
+  });
+
+}
 
 
     const passwordMatch =

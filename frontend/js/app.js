@@ -418,6 +418,276 @@ function showApplication() {
     showPage("dashboard");
 }
 
+/* =========================
+   AGENT DASHBOARD DISPLAY
+========================= */
+
+function showAgentDashboard() {
+
+    authContainer
+        .classList
+        .add("hidden");
+
+    appContainer
+        .classList
+        .add("hidden");
+
+    const agentDashboard =
+        document.getElementById(
+            "agentDashboardContainer"
+        );
+
+    if (!agentDashboard) {
+
+        console.error(
+            "Agent dashboard container not found."
+        );
+
+        return;
+    }
+
+    agentDashboard
+        .classList
+        .remove("hidden");
+
+
+    const agent =
+        getUser();
+
+    if (agent) {
+
+        const name =
+            agent.name ||
+            agent.fullName ||
+            "Agent";
+
+        const nameElement =
+            document.getElementById(
+                "agentTopbarName"
+            );
+
+        const avatar =
+            document.getElementById(
+                "agentUserAvatar"
+            );
+
+        const greeting =
+            document.getElementById(
+                "agentDashboardGreeting"
+            );
+
+
+        if (nameElement) {
+
+            nameElement.textContent =
+                name;
+        }
+
+
+        if (avatar) {
+
+            avatar.textContent =
+                name
+                    .charAt(0)
+                    .toUpperCase();
+        }
+
+
+        if (greeting) {
+
+            const hour =
+                new Date()
+                    .getHours();
+
+            let text;
+
+            if (hour < 12) {
+
+                text =
+                    "Good morning";
+
+            } else if (hour < 17) {
+
+                text =
+                    "Good afternoon";
+
+            } else if (hour < 21) {
+
+                text =
+                    "Good evening";
+
+            } else {
+
+                text =
+                    "Good night";
+            }
+
+
+            greeting.textContent =
+                `${text}, ${name}.`;
+        }
+    }
+
+    setupAgentNavigation();
+
+    console.log(
+        "Agent dashboard opened."
+    );
+}
+
+/* =========================
+   AGENT NAVIGATION
+========================= */
+
+function setupAgentNavigation() {
+
+    const agentNavItems =
+        document.querySelectorAll(
+            "[data-agent-page]"
+        );
+
+    agentNavItems.forEach(
+        (button) => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    const page =
+                        button.dataset.agentPage;
+
+                    showAgentPage(page);
+
+                    const agentSidebar =
+                        document.getElementById(
+                            "agentSidebar"
+                        );
+
+                    if (agentSidebar) {
+
+                        agentSidebar.classList
+                            .remove("open");
+                    }
+                }
+            );
+
+        }
+    );
+
+
+    const agentMenuBtn =
+        document.getElementById(
+            "agentMenuBtn"
+        );
+
+    if (agentMenuBtn) {
+
+        agentMenuBtn.addEventListener(
+            "click",
+            () => {
+
+                const agentSidebar =
+                    document.getElementById(
+                        "agentSidebar"
+                    );
+
+                if (agentSidebar) {
+
+                    agentSidebar.classList
+                        .toggle("open");
+                }
+            }
+        );
+
+    }
+}
+
+
+/* =========================
+   AGENT PAGE
+========================= */
+
+function showAgentPage(pageName) {
+
+    const agentPages =
+        document.querySelectorAll(
+            "#agentDashboardContainer .app-page"
+        );
+
+
+    agentPages.forEach(
+        (page) => {
+
+            page.classList
+                .remove(
+                    "active-page"
+                );
+        }
+    );
+
+
+    const selectedPage =
+        document.getElementById(
+            `agent${capitalizeFirstLetter(pageName)}Page`
+        );
+
+
+    if (selectedPage) {
+
+        selectedPage.classList
+            .add(
+                "active-page"
+            );
+    }
+
+
+    const agentNavItems =
+        document.querySelectorAll(
+            "#agentDashboardContainer [data-agent-page]"
+        );
+
+
+    agentNavItems.forEach(
+        (item) => {
+
+            item.classList
+                .remove(
+                    "active"
+                );
+
+
+            if (
+                item.dataset.agentPage ===
+                pageName
+            ) {
+
+                item.classList
+                    .add(
+                        "active"
+                    );
+            }
+        }
+    );
+}
+
+
+/* =========================
+   CAPITALIZE FIRST LETTER
+========================= */
+
+function capitalizeFirstLetter(value) {
+
+    if (!value) {
+
+        return "";
+    }
+
+
+    return (
+        value.charAt(0).toUpperCase() +
+        value.slice(1)
+    );
+}
 
 /* =========================
    USER INFORMATION
@@ -1343,10 +1613,30 @@ loginForm.addEventListener(
 
         try {
 
-            await loginUser(
-                identifier,
-                password
-            );
+            const loginResult =
+    await loginUser(
+        identifier,
+        password
+    );
+
+    /* =========================================
+   AGENT LOGIN
+========================================= */
+
+if (
+    loginResult.user &&
+    loginResult.user.accountType ===
+        "agent"
+) {
+
+    showNotification(
+        "Login successful."
+    );
+
+    showAgentDashboard();
+
+    return;
+}
 
 
             showNotification(
@@ -1578,8 +1868,9 @@ agentPasswordToggle.addEventListener(
             agentPassword.type =
                 "text";
 
-            agentPasswordToggle.textContent =
-                "👁";
+            agentPasswordToggle.classList.remove(
+                "password-hidden"
+            );
 
             agentPasswordToggle.setAttribute(
                 "aria-label",
@@ -1591,8 +1882,9 @@ agentPasswordToggle.addEventListener(
             agentPassword.type =
                 "password";
 
-            agentPasswordToggle.textContent =
-                "👁̸";
+            agentPasswordToggle.classList.add(
+                "password-hidden"
+            );
 
             agentPasswordToggle.setAttribute(
                 "aria-label",
@@ -1615,8 +1907,9 @@ agentConfirmPasswordToggle.addEventListener(
             agentConfirmPassword.type =
                 "text";
 
-            agentConfirmPasswordToggle.textContent =
-                "👁";
+            agentConfirmPasswordToggle.classList.remove(
+                "password-hidden"
+            );
 
             agentConfirmPasswordToggle.setAttribute(
                 "aria-label",
@@ -1628,8 +1921,9 @@ agentConfirmPasswordToggle.addEventListener(
             agentConfirmPassword.type =
                 "password";
 
-            agentConfirmPasswordToggle.textContent =
-                "👁̸";
+            agentConfirmPasswordToggle.classList.add(
+                "password-hidden"
+            );
 
             agentConfirmPasswordToggle.setAttribute(
                 "aria-label",

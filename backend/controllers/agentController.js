@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 
 const Agent = require("../models/agent");
+const User = require("../models/user");
 const sendEmail = require("../config/email");
 
 /* =========================================
@@ -389,6 +390,34 @@ const registerAgent = async (
       await Agent.findOne({
         nin: cleanNIN,
       });
+
+      /* =====================================
+   CHECK EMAIL ACROSS ENTIRE SYSTEM
+
+   Email must be unique between
+   Users and Agents.
+
+   Phone numbers are intentionally
+   NOT checked across the two systems.
+===================================== */
+
+const existingUserByEmail =
+  await User.findOne({
+    email: cleanEmail,
+  });
+
+if (existingUserByEmail) {
+
+  return res.status(409).json({
+
+    success: false,
+
+    message:
+      "An account with this email already exists. Please use a different email address.",
+
+  });
+
+}
 
     /* =====================================
        COLLECT UNIQUE MATCHES
