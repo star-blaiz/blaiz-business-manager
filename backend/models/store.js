@@ -62,6 +62,44 @@ const storeSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+        adminStatus: {
+      type: String,
+      enum: ["active", "suspended"],
+      default: "active",
+    },
+
+    suspensionReason: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    suspensionLiftDate: {
+      type: Date,
+      default: null,
+    },
+
+    suspendedAt: {
+      type: Date,
+      default: null,
+    },
+
+    suspendedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AdminAccount",
+      default: null,
+    },
+
+    restoredAt: {
+      type: Date,
+      default: null,
+    },
+
+    restoredBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AdminAccount",
+      default: null,
+    },
   },
   {
     timestamps: true,
