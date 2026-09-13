@@ -770,6 +770,35 @@ const login = async (req, res) => {
           )
         : null;
 
+        /* -----------------------------------------
+   CHECK STORE SUSPENSION
+----------------------------------------- */
+
+if (
+  store &&
+  store.adminStatus === "suspended"
+) {
+
+  return res.status(403).json({
+
+    success: false,
+
+    code:
+      "STORE_SUSPENDED",
+
+    message:
+      "This store has been suspended by Blaiz Administration.",
+
+    suspensionReason:
+      store.suspensionReason || null,
+
+    suspensionLiftDate:
+      store.suspensionLiftDate || null,
+
+  });
+
+}
+
 
     if (
       user.accountType ===
