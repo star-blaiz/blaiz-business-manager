@@ -280,6 +280,423 @@ let customers = [];
 let sales = [];
 let saleCart = [];
 
+
+/* =========================
+   STORE SUSPENSION
+========================= */
+
+let storeSuspensionActive = false;
+
+
+/*
+ * Show blocking suspension screen
+ */
+
+function showStoreSuspension(details = {}) {
+
+    if (storeSuspensionActive) {
+        return;
+    }
+
+    storeSuspensionActive = true;
+
+
+    /*
+     * Create overlay
+     */
+
+    const overlay =
+        document.createElement(
+            "div"
+        );
+
+    overlay.id =
+        "storeSuspensionOverlay";
+
+
+    /*
+     * Format suspension lift date
+     */
+
+    let liftDateText =
+        "No restoration date was provided.";
+
+    if (details.liftDate) {
+
+        const date =
+            new Date(
+                details.liftDate
+            );
+
+        if (
+            !Number.isNaN(
+                date.getTime()
+            )
+        ) {
+
+            liftDateText =
+                date.toLocaleDateString(
+                    undefined,
+                    {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric"
+                    }
+                );
+        }
+    }
+
+
+    /*
+     * Build suspension screen
+     */
+
+    overlay.innerHTML = `
+
+        <div
+            style="
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.92);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                z-index: 999999;
+                box-sizing: border-box;
+            "
+        >
+
+            <div
+                style="
+                    width: 100%;
+                    max-width: 460px;
+                    background: #151515;
+                    border-radius: 16px;
+                    padding: 30px 24px;
+                    box-sizing: border-box;
+                    text-align: center;
+                    color: white;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                "
+            >
+
+                <div
+                    style="
+                        width: 70px;
+                        height: 70px;
+                        margin: 0 auto 20px;
+                        border-radius: 50%;
+                        background: rgba(255,0,0,0.12);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 34px;
+                    "
+                >
+                    ⚠️
+                </div>
+
+
+                <h2
+                    style="
+                        margin: 0 0 12px;
+                        font-size: 25px;
+                        color: #ff4d4d;
+                    "
+                >
+                    Store Suspended
+                </h2>
+
+
+                <p
+                    style="
+                        margin: 0 0 20px;
+                        line-height: 1.6;
+                        color: #eeeeee;
+                        font-size: 15px;
+                    "
+                >
+                    ${
+                        details.message ||
+                        "This store has been suspended by Blaiz Administration."
+                    }
+                </p>
+
+
+                <div
+                    style="
+                        background: #222222;
+                        border-radius: 10px;
+                        padding: 15px;
+                        margin-bottom: 15px;
+                        text-align: left;
+                    "
+                >
+
+                    <div
+                        style="
+                            color: #aaaaaa;
+                            font-size: 13px;
+                            margin-bottom: 6px;
+                        "
+                    >
+                        Suspension Reason
+                    </div>
+
+                    <div
+                        style="
+                            color: white;
+                            font-size: 15px;
+                            line-height: 1.5;
+                        "
+                    >
+                        ${
+                            details.reason ||
+                            "No specific reason was provided."
+                        }
+                    </div>
+
+                </div>
+
+
+                <div
+                    style="
+                        background: #222222;
+                        border-radius: 10px;
+                        padding: 15px;
+                        margin-bottom: 25px;
+                        text-align: left;
+                    "
+                >
+
+                    <div
+                        style="
+                            color: #aaaaaa;
+                            font-size: 13px;
+                            margin-bottom: 6px;
+                        "
+                    >
+                        Suspension Lift Date
+                    </div>
+
+                    <div
+                        style="
+                            color: white;
+                            font-size: 15px;
+                        "
+                    >
+                        ${liftDateText}
+                    </div>
+
+                </div>
+
+
+                <button
+                    id="storeSuspensionLogoutBtn"
+                    style="
+                        width: 100%;
+                        border: none;
+                        border-radius: 10px;
+                        padding: 14px;
+                        background: #d32f2f;
+                        color: white;
+                        font-size: 16px;
+                        font-weight: 600;
+                        cursor: pointer;
+                    "
+                >
+                    Log Out
+                </button>
+
+            </div>
+
+        </div>
+    `;
+
+
+    document.body.appendChild(
+        overlay
+    );
+
+
+    /*
+     * Prevent normal interaction
+     */
+
+    document.body.style.overflow =
+        "hidden";
+
+
+    /*
+     * Logout button
+     */
+
+    const logoutButton =
+        document.getElementById(
+            "storeSuspensionLogoutBtn"
+        );
+
+
+    if (logoutButton) {
+
+        logoutButton.addEventListener(
+            "click",
+            () => {
+
+                logoutUser();
+
+                location.reload();
+
+            }
+        );
+
+    }
+
+}
+
+
+/*
+ * Listen for suspension
+ * reported by api.js
+ */
+
+window.addEventListener(
+    "storeSuspended",
+    event => {
+
+        showStoreSuspension(
+            event.detail || {}
+        );
+
+    }
+);
+
+
+/*
+ * Periodically check the logged-in
+ * user's authenticated session.
+ */
+
+let storeSuspensionCheckInterval =
+    null;
+
+
+function startStoreSuspensionCheck() {
+
+    /*
+     * Prevent multiple intervals
+     * from being created.
+     */
+
+    if (
+        storeSuspensionCheckInterval
+    ) {
+        return;
+    }
+
+
+    /*
+     * Check after a short delay
+     * so the app can finish loading first.
+     */
+
+    setTimeout(
+        async () => {
+
+            if (!isLoggedIn()) {
+                return;
+            }
+
+            try {
+
+                /*
+                 * This is a protected request.
+                 *
+                 * If the store has been suspended,
+                 * api.js will detect STORE_SUSPENDED
+                 * and open the blocking screen.
+                 */
+
+                await apiRequest(
+                    "/stores/my-store",
+                    {
+                        method: "GET"
+                    }
+                );
+
+            } catch (error) {
+
+                /*
+                 * Ignore the error here.
+                 *
+                 * api.js already handles
+                 * STORE_SUSPENDED.
+                 */
+
+                console.log(
+                    "Store suspension check:",
+                    error.message
+                );
+
+            }
+
+        },
+        3000
+    );
+
+
+    /*
+     * Continue checking periodically.
+     */
+
+    storeSuspensionCheckInterval =
+        setInterval(
+            async () => {
+
+                if (!isLoggedIn()) {
+
+                    clearInterval(
+                        storeSuspensionCheckInterval
+                    );
+
+                    storeSuspensionCheckInterval =
+                        null;
+
+                    return;
+                }
+
+
+                try {
+
+                    await apiRequest(
+                        "/stores/my-store",
+                        {
+                            method: "GET"
+                        }
+                    );
+
+                } catch (error) {
+
+                    /*
+                     * STORE_SUSPENDED is already
+                     * handled by api.js.
+                     */
+
+                    console.log(
+                        "Store suspension check:",
+                        error.message
+                    );
+
+                }
+
+            },
+            30000
+        );
+
+}
+
+
 /* =========================
    APP START
 ========================= */
@@ -309,7 +726,8 @@ function initializeApp() {
         if (isLoggedIn()) {
 
             showApplication();
-             preloadStoreData();
+            preloadStoreData();
+            startStoreSuspensionCheck();
 
 
             /*

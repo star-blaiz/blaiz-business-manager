@@ -41,11 +41,41 @@ async function apiRequest(
     }
 
     if (!response.ok) {
-        throw new Error(
-            data.message ||
-            "Something went wrong."
+
+    /* =========================================
+       STORE SUSPENSION
+    ========================================= */
+
+    if (
+    response.status === 403 &&
+    data.code === "STORE_SUSPENDED" &&
+    token
+) {
+
+        window.dispatchEvent(
+            new CustomEvent(
+                "storeSuspended",
+                {
+                    detail: {
+                        message:
+                            data.message,
+
+                        reason:
+                            data.suspensionReason,
+
+                        liftDate:
+                            data.suspensionLiftDate
+                    }
+                }
+            )
         );
     }
+
+    throw new Error(
+        data.message ||
+        "Something went wrong."
+    );
+}
 
     return data;
 }

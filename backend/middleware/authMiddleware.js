@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const Agent = require("../models/agent");
+const Store = require("../models/store");
 
 const protect = async (req, res, next) => {
   try {
@@ -82,15 +83,56 @@ if (decoded.agentId) {
     }
 
     if (user.status !== "active") {
-      return res.status(403).json({
-        success: false,
-        message: "This account is currently inactive.",
-      });
-    }
+  return res.status(403).json({
+    success: false,
+    message: "This account is currently inactive.",
+  });
+}
 
-    req.user = user;
+/* =========================================
+   CHECK STORE SUSPENSION
+========================================= */
 
-    next();
+if (user.storeId) {
+
+  const store =
+    await Store.findById(
+      user.storeId
+    );
+
+  if (
+    store &&
+    store.adminStatus === "suspended"
+  ) {
+
+    return res.status(403).json({
+
+      success: false,
+
+      code:
+        "STORE_SUSPENDED",
+
+      message:
+        "This store has been suspended by Blaiz Administration.",
+
+      suspensionReason:
+        store.suspensionReason ||
+        null,
+
+      suspensionLiftDate:
+        store.suspensionLiftDate ||
+        null,
+
+    });
+
+  }
+
+}
+
+req.user = user;
+
+next();
+
   } catch (error) {
     return res.status(401).json({
       success: false,
