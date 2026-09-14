@@ -236,7 +236,7 @@ await SupportMessage.create({
         "admin",
 
     senderId:
-        null,
+        store.ownerId,
 
     message:
         "Thank you for contacting Blaiz Support. Your support request has been received successfully. Our support team will review your message and respond as soon as possible.",
