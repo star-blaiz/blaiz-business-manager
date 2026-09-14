@@ -224,11 +224,110 @@ const createSupportTicket =
                     false
             });
 
-            /* =========================================
-   AUTOMATIC SUPPORT ACKNOWLEDGEMENT
+   /* =========================================
+   SMART AUTOMATIC SUPPORT ACKNOWLEDGEMENT
 ========================================= */
 
+let automaticSupportMessage =
+    "Thank you for contacting Blaiz Support. Your support request has been received successfully. Our support team will review your message and respond as soon as possible.";
+
+
+switch (
+    cleanCategory.toLowerCase()
+) {
+
+    case "account":
+
+        automaticSupportMessage =
+            "Thank you for contacting Blaiz Support regarding your account. Your request has been received and our support team will review it shortly.";
+
+        break;
+
+
+    case "login":
+
+        automaticSupportMessage =
+            "We have received your login-related request. Our support team will review the issue and assist you as soon as possible.";
+
+        break;
+
+
+    case "workers":
+
+        automaticSupportMessage =
+            "Your request regarding workers has been received. Our support team will review it and get back to you as soon as possible.";
+
+        break;
+
+
+    case "inventory":
+
+        automaticSupportMessage =
+            "We have received your inventory-related request. Our support team will review the issue and assist you shortly.";
+
+        break;
+
+
+    case "sales":
+
+        automaticSupportMessage =
+            "Your sales-related support request has been received. Our support team will review the issue and respond as soon as possible.";
+
+        break;
+
+
+    case "customers":
+
+        automaticSupportMessage =
+            "We have received your customer-management support request. Our support team will review it and assist you shortly.";
+
+        break;
+
+
+    case "receipts":
+
+        automaticSupportMessage =
+            "Your receipt-related support request has been received. Our support team will review the issue and get back to you shortly.";
+
+        break;
+
+
+    case "premium":
+
+        automaticSupportMessage =
+            "We have received your Premium-related request. Our support team will review your request and assist you as soon as possible.";
+
+        break;
+
+
+    case "payments":
+
+        automaticSupportMessage =
+            "Your payment-related support request has been received. Our support team will review the issue and assist you as soon as possible.";
+
+        break;
+
+
+    case "technical":
+
+        automaticSupportMessage =
+            "We have received your technical support request. Our technical team will review the issue and assist you as soon as possible.";
+
+        break;
+
+
+    case "other":
+
+        automaticSupportMessage =
+            "Thank you for contacting Blaiz Support. Your request has been received and our support team will review it as soon as possible.";
+
+        break;
+
+}
+
+
 await SupportMessage.create({
+
     ticketId:
         ticket._id,
 
@@ -239,7 +338,7 @@ await SupportMessage.create({
         store.ownerId,
 
     message:
-        "Thank you for contacting Blaiz Support. Your support request has been received successfully. Our support team will review your message and respond as soon as possible.",
+        automaticSupportMessage,
 
     isInternal:
         false,
@@ -249,6 +348,7 @@ await SupportMessage.create({
 
     readByAdmin:
         true
+
 });
 
             /*
