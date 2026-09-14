@@ -944,9 +944,7 @@ function renderSupportTicket(
    RENDER SUPPORT MESSAGE
 ========================================= */
 
-function renderSupportMessage(
-    message
-) {
+function renderSupportMessage(message) {
 
     const senderClass =
         message.senderType === "admin"
@@ -954,15 +952,32 @@ function renderSupportMessage(
             : "support-message-user";
 
 
-    const senderLabel =
+    let senderLabel;
+
+    if (
         message.senderType === "admin"
-            ? "Blaiz Support"
-            : "You";
+    ) {
+
+        senderLabel =
+            message.isAutomatic
+                ? "Blaiz Support • Automatic Reply"
+                : "Blaiz Support";
+
+    } else {
+
+        senderLabel =
+            "You";
+
+    }
 
 
     return `
         <div
-            class="support-message ${senderClass}"
+            class="support-message ${senderClass} ${
+                message.isAutomatic
+                    ? "support-message-automatic"
+                    : ""
+            }"
         >
 
             <div class="support-message-header">
@@ -990,7 +1005,6 @@ function renderSupportMessage(
     `;
 
 }
-
 
 /* =========================================
    REPLY TO TICKET

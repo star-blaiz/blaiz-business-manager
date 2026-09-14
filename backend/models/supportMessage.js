@@ -42,7 +42,12 @@ const supportMessageSchema =
             readByAdmin: {
                 type: Boolean,
                 default: false
-            }
+            },
+
+            isAutomatic: {
+    type: Boolean,
+    default: false
+}
         },
         {
             timestamps: true,

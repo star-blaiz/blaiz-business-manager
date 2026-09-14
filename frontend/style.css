@@ -1653,3 +1653,17 @@ button {
 .support-form-header {
     margin-bottom: 20px;
 }
+
+/* =========================================
+   AUTOMATIC SUPPORT REPLY
+========================================= */
+
+.support-message-automatic {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+}
+
+.support-message-automatic
+.support-message-header strong {
+    font-weight: 700;
+}
