@@ -14,6 +14,10 @@ import {
     apiRequest
 } from "./api.js";
 
+import {
+    initializeSupport
+} from "./support.js";
+
 /* =========================
    ANDROID PAYMENT DEEP LINK
 ========================= */
@@ -1351,6 +1355,14 @@ function showPage(pageName) {
     ) {
         setupDashboard();
     }
+
+        if (
+        pageName ===
+        "support"
+    ) {
+        initializeSupport();
+    }
+
 
      if (
     pageName ===
