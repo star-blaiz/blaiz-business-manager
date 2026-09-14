@@ -224,6 +224,32 @@ const createSupportTicket =
                     false
             });
 
+            /* =========================================
+   AUTOMATIC SUPPORT ACKNOWLEDGEMENT
+========================================= */
+
+await SupportMessage.create({
+    ticketId:
+        ticket._id,
+
+    senderType:
+        "admin",
+
+    senderId:
+        null,
+
+    message:
+        "Thank you for contacting Blaiz Support. Your support request has been received successfully. Our support team will review your message and respond as soon as possible.",
+
+    isInternal:
+        false,
+
+    readByUser:
+        false,
+
+    readByAdmin:
+        true
+});
 
             /*
              * Notify all users of the store.

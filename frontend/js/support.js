@@ -7,6 +7,7 @@ import { apiRequest } from "./api.js";
 
 
 let currentSupportTicketId = null;
+let supportReplyPollingTimer = null;
 
 
 /* =========================================
@@ -41,6 +42,10 @@ export function initializeSupport() {
 ========================================= */
 
 export async function loadSupportTickets() {
+
+        stopSupportReplyPolling();
+
+    currentSupportTicketId = null;
 
     const container =
         document.getElementById(
@@ -514,11 +519,11 @@ async function handleCreateSupportTicket(
                 {
                     method: "POST",
 
-                    body: {
-                        subject,
-                        category,
-                        message
-                    }
+                    body: JSON.stringify({
+                    subject,
+                    category,
+                    message
+                    })
                 }
             );
 
@@ -645,6 +650,7 @@ async function openSupportTicket(
             result.messages || []
         );
 
+startSupportReplyPolling();
 
     } catch (error) {
 
@@ -1059,9 +1065,9 @@ async function handleSupportReply(
                 {
                     method: "POST",
 
-                    body: {
-                        message
-                    }
+                    body: JSON.stringify({
+                    message
+                    })
                 }
             );
 
@@ -1328,5 +1334,136 @@ function escapeHtml(
             /'/g,
             "&#039;"
         );
+
+}
+
+/* =========================================
+   POLL FOR NEW SUPPORT REPLIES
+========================================= */
+
+function startSupportReplyPolling() {
+
+    stopSupportReplyPolling();
+
+
+    supportReplyPollingTimer =
+        setInterval(
+            async () => {
+
+                if (
+                    !currentSupportTicketId
+                ) {
+                    return;
+                }
+
+
+                try {
+
+                    const result =
+                        await apiRequest(
+                            `/support/${encodeURIComponent(
+                                currentSupportTicketId
+                            )}`,
+                            {
+                                method: "GET"
+                            }
+                        );
+
+
+                    if (
+                        !result ||
+                        !result.success
+                    ) {
+                        return;
+                    }
+
+                    /* =========================================
+   UPDATE TICKET STATUS
+========================================= */
+
+const statusElement =
+    document.querySelector(
+        ".support-ticket-header .support-status"
+    );
+
+
+if (
+    statusElement &&
+    result.ticket
+) {
+
+    statusElement.className =
+        `support-status support-status-${escapeHtml(
+            result.ticket.status
+        )}`;
+
+    statusElement.textContent =
+        formatStatus(
+            result.ticket.status
+        );
+
+}
+
+
+                    const messagesContainer =
+                        document.getElementById(
+                            "supportMessages"
+                        );
+
+
+                    if (
+                        messagesContainer
+                    ) {
+
+                        messagesContainer.innerHTML =
+                            result.messages?.length
+                                ? result.messages
+                                    .map(
+                                        renderSupportMessage
+                                    )
+                                    .join("")
+                                : `
+                                    <div class="notification-empty">
+                                        No messages yet.
+                                    </div>
+                                `;
+
+
+                        messagesContainer.scrollTop =
+                            messagesContainer.scrollHeight;
+
+                    }
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Support reply polling error:",
+                        error
+                    );
+
+                }
+
+            },
+            5000
+        );
+
+}
+
+
+function stopSupportReplyPolling() {
+
+    if (
+        supportReplyPollingTimer
+    ) {
+
+        clearInterval(
+            supportReplyPollingTimer
+        );
+
+        supportReplyPollingTimer =
+            null;
+
+    }
 
 }
