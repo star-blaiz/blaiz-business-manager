@@ -688,17 +688,22 @@ const replyToSupportTicket =
                 });
 
 
-            ticket.status =
-                "open";
-
             ticket.lastMessageAt =
-                new Date();
+    new Date();
 
-            ticket.resolvedAt =
-                null;
+if (
+    ticket.status ===
+    "waiting_for_user"
+) {
+    ticket.status =
+        "in_progress";
+}
 
-            ticket.closedAt =
-                null;
+ticket.resolvedAt =
+    null;
+
+ticket.closedAt =
+    null;
 
 
             await ticket.save();
