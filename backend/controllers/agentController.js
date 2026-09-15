@@ -581,6 +581,21 @@ if (existingUserByEmail) {
         existingAgent.reviewedBy =
           null;
 
+          existingAgent.ninVerified =
+    false;
+
+existingAgent.ninVerifiedAt =
+    null;
+
+existingAgent.ninVerifiedBy =
+    null;
+
+existingAgent.ninVerifiedByName =
+    null;
+
+existingAgent.ninVerifiedByPosition =
+    null;
+
         /* ================================
            RESET ACCOUNT STATUS
         ================================= */

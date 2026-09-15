@@ -347,6 +347,9 @@ await SupportMessage.create({
         false,
 
     readByAdmin:
+        true,
+
+    isAutomatic:
         true
 
 });
