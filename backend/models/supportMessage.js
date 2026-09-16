@@ -17,10 +17,10 @@ const supportMessageSchema =
             },
 
             senderId: {
-                type: mongoose.Schema.Types.ObjectId,
-                required: true,
-                index: true
-            },
+    type: mongoose.Schema.Types.ObjectId,
+    default: null,
+    index: true
+},
 
             message: {
                 type: String,

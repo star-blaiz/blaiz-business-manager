@@ -20,6 +20,42 @@ const cleanString = (value) => {
     return value.trim();
 };
 
+const getAutomaticReply =
+    (category) => {
+
+        const replies = {
+
+            account:
+                "Thanks for contacting Blaiz Support about your account. Your ticket has been received and our support team will review it shortly.",
+
+            login:
+                "Thanks for contacting Blaiz Support about your login issue. Your ticket has been received and our support team will review it shortly.",
+
+            referrals:
+                "Thanks for contacting Blaiz Support about referrals. Your ticket has been received and our support team will review it shortly.",
+
+            earnings:
+                "Thanks for contacting Blaiz Support about earnings. Your ticket has been received and our support team will review it shortly.",
+
+            payments:
+                "Thanks for contacting Blaiz Support about payments. Your ticket has been received and our support team will review it shortly.",
+
+            technical:
+                "Thanks for contacting Blaiz Support about your technical issue. Your ticket has been received and our support team will review it shortly.",
+
+            other:
+                "Thanks for contacting Blaiz Support. Your ticket has been received and our support team will review it shortly."
+
+        };
+
+
+        return (
+            replies[category] ||
+            replies.other
+        );
+
+    };
+
 
 const validObjectId = (value) => {
 
@@ -213,6 +249,36 @@ const createAgentSupportTicket =
 
                 });
 
+                const automaticReply =
+    await SupportMessage.create({
+
+        ticketId:
+            ticket._id,
+
+        senderType:
+            "admin",
+
+        senderId:
+            null,
+
+        message:
+            getAutomaticReply(
+                cleanCategory
+            ),
+
+        isInternal:
+            false,
+
+        readByUser:
+            false,
+
+        readByAdmin:
+            true,
+
+        isAutomatic:
+            true
+
+    });
 
             return res.status(201).json({
 
