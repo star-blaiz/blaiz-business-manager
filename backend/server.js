@@ -20,6 +20,10 @@ const settingsRoutes = require("./routes/settingsRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const agentRoutes = require("./routes/agentRoutes");
 const supportRoutes = require("./routes/supportRoutes");
+const agentNotificationRoutes =
+    require("./routes/agentNotificationRoutes");
+  const agentStatusRoutes =
+    require("./routes/agentStatusRoutes");
 
 const app = express();
 
@@ -85,6 +89,14 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/agents", agentRoutes);
 app.use("/api/support", supportRoutes);
+app.use(
+    "/api/agent-notifications",
+    agentNotificationRoutes
+);
+app.use(
+    "/api/agents",
+    agentStatusRoutes
+);
 
 const startServer = async () => {
   await connectDatabase();

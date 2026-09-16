@@ -552,6 +552,24 @@
 
                     </div>
 
+                    <div class="input-group">
+
+    <label>
+        Agent Referral Code
+        <span style="font-weight: normal;">
+            (Optional)
+        </span>
+    </label>
+
+    <input
+        type="text"
+        id="registerReferralCode"
+        placeholder="Enter referral code if you have one"
+        autocomplete="off"
+    >
+
+</div>
+
                      <div class="terms-consent">
 
                         <label>
@@ -1988,15 +2006,23 @@
 
         <div class="sidebar-header">
 
-            <div class="sidebar-logo">
-                BLAIZ
-            </div>
+    <img
+        src="./assets/blaiz-log.jpg"
+        alt="Blaiz"
+        class="sidebar-logo"
+    >
 
-            <div class="sidebar-subtitle">
-                Agent
-            </div>
+    <div>
+        <strong>
+            Blaiz
+        </strong>
 
-        </div>
+        <span>
+            Business Manager
+        </span>
+    </div>
+
+</div>
 
 
         <nav class="sidebar-nav">
@@ -2103,7 +2129,7 @@
             <div class="topbar-store">
 
                 <span id="agentTopbarTitle">
-                    Agent Dashboard
+                    <h1>AGENT</h1>
                 </span>
 
             </div>
@@ -2269,38 +2295,83 @@
                 </p>
 
 
-                <div class="form-group">
+<div
+    class="form-group"
+    style="
+        margin-top:25px;
+        margin-bottom:25px;
+    "
+>
 
-                    <label>
-                        Referral Code
-                    </label>
+    <label
+        style="
+            display:block;
+            font-size:16px;
+            font-weight:700;
+            margin-bottom:10px;
+        "
+    >
+        Referral Code
+    </label>
 
-                    <div
-                        id="agentReferralCode"
-                        class="form-input"
-                    >
-                        Loading...
-                    </div>
+    <div
+        id="agentReferralCode"
+        class="form-input"
+        style="
+            min-height:52px;
+            display:flex;
+            align-items:center;
+            padding:12px 15px;
+            font-size:18px;
+            font-weight:700;
+            letter-spacing:0.5px;
+            word-break:break-word;
+        "
+    >
+        Loading...
+    </div>
 
-                </div>
-
-
-                <div class="form-group">
-
-                    <label>
-                        Referral Link
-                    </label>
-
-                    <div
-                        id="agentReferralLink"
-                        class="form-input"
-                    >
-                        Loading...
-                    </div>
-
-                </div>
+</div>
 
 
+<div
+    class="form-group"
+    style="
+        margin-top:25px;
+        margin-bottom:20px;
+    "
+>
+
+    <label
+        style="
+            display:block;
+            font-size:16px;
+            font-weight:700;
+            margin-bottom:10px;
+        "
+    >
+        Referral Link
+    </label>
+
+    <div
+        id="agentReferralLink"
+        class="form-input"
+        style="
+            min-height:52px;
+            display:flex;
+            align-items:center;
+            padding:12px 15px;
+            font-size:15px;
+            font-weight:700;
+            line-height:1.5;
+            word-break:break-all;
+            overflow-wrap:anywhere;
+        "
+    >
+        Loading...
+    </div>
+
+</div>
                 <div
                     style="
                         display:flex;
@@ -2461,26 +2532,31 @@
 
             <div class="page-header">
 
-                <div>
+    <div>
+        <h1>
+            Notifications
+        </h1>
 
-                    <h1>
-                        Notifications
-                    </h1>
+        <p>
+            Stay updated on your Agent activities.
+        </p>
+    </div>
 
-                    <p>
-                        Stay updated on your Agent activities.
-                    </p>
+    <button
+        id="agentMarkAllNotificationsReadBtn"
+        type="button"
+        class="secondary-btn"
+    >
+        Mark all as read
+    </button>
 
-                </div>
-
-            </div>
+</div>
 
 
-            <div
-                id="agentNotificationsList"
-                class="content-card"
-            >
-
+<div
+    id="agentNotificationsList"
+    class="content-card"
+>
                 <div class="notification-empty">
                     No notifications yet.
                 </div>
@@ -2492,64 +2568,147 @@
 
         <!-- ACCOUNT PAGE -->
 
-        <section
-            id="agentAccountPage"
-            class="app-page"
+<section
+    id="agentAccountPage"
+    class="app-page"
+>
+
+    <div class="page-header">
+
+        <div>
+
+            <h1>
+                Account
+            </h1>
+
+            <p>
+                Manage your Agent profile and payment details.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         PROFILE
+    ========================== -->
+
+    <div class="content-card">
+
+        <div
+            style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                gap:15px;
+                flex-wrap:wrap;
+            "
         >
 
-            <div class="page-header">
-
-                <div>
-
-                    <h1>
-                        Account
-                    </h1>
-
-                    <p>
-                        Manage your Agent account.
-                    </p>
-
-                </div>
-
-            </div>
-
-
-            <div class="content-card">
+            <div>
 
                 <h2>
                     Profile
                 </h2>
 
-                <div id="agentProfileDetails">
-                    Loading profile...
-                </div>
-
-            </div>
-
-
-            <div class="content-card">
-
-                <h2>
-                    Bank Account
-                </h2>
-
-                <p>
-                    Add or update the bank account where
-                    your commissions will be paid.
+                <p
+                    style="
+                        margin-top:6px;
+                    "
+                >
+                    Your Agent registration information.
                 </p>
 
+            </div>
 
-                <button
-                    id="agentBankAccountBtn"
-                    class="primary-btn"
-                    type="button"
+            <button
+                id="agentEditProfileBtn"
+                class="primary-btn"
+                type="button"
+            >
+                Edit Profile
+            </button>
+
+        </div>
+
+
+        <div
+            id="agentProfileDetails"
+            style="
+                margin-top:25px;
+            "
+        >
+
+            Loading profile...
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         BANK DETAILS
+    ========================== -->
+
+    <div class="content-card">
+
+        <div
+            style="
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                gap:15px;
+                flex-wrap:wrap;
+            "
+        >
+
+            <div>
+
+                <h2>
+                    Bank Details
+                </h2>
+
+                <p
+                    style="
+                        margin-top:6px;
+                    "
                 >
-                    Manage Bank Account
-                </button>
+                    Add the bank account where your
+                    commissions will be paid.
+                </p>
 
             </div>
 
-        </section>
+            <button
+                id="agentBankAccountBtn"
+                class="primary-btn"
+                type="button"
+            >
+                Add Bank Details
+            </button>
+
+        </div>
+
+
+        <div
+            id="agentBankAccountStatus"
+            style="
+                margin-top:25px;
+                padding:18px;
+                border-radius:12px;
+                background:rgba(128,128,128,0.08);
+                line-height:1.8;
+            "
+        >
+
+            Loading bank details...
+
+        </div>
+
+    </div>
+
+</section>
 
 
         <!-- SUPPORT PAGE -->

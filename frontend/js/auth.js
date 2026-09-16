@@ -39,10 +39,13 @@ async function registerOwner(data) {
                         data.storeAddress || "",
 
                     businessType:
-                        data.businessType || "",
+    data.businessType || "",
 
-                         termsAccepted:
-                        data.termsAccepted === true
+referralCode:
+    data.referralCode || "",
+
+termsAccepted:
+    data.termsAccepted === true
                 })
             }
         );

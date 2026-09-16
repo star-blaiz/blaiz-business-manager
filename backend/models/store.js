@@ -9,6 +9,19 @@ const storeSchema = new mongoose.Schema(
       unique: true,
     },
 
+    agentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Agent",
+    default: null,
+},
+
+agentReferralCode: {
+    type: String,
+    default: null,
+    trim: true,
+    uppercase: true,
+},
+
     storeName: {
       type: String,
       required: true,

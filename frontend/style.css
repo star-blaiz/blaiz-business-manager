@@ -1667,3 +1667,109 @@ button {
 .support-message-header strong {
     font-weight: 700;
 }
+
+/* =========================================
+   AGENT DASHBOARD LAYOUT
+========================================= */
+
+#agentDashboardContainer {
+    width: 100%;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+
+/* =========================================
+   AGENT SIDEBAR
+========================================= */
+
+#agentDashboardContainer #agentSidebar {
+    width: 250px;
+    min-width: 250px;
+    height: 100vh;
+
+    position: fixed;
+    left: 0;
+    top: 0;
+
+    z-index: 1000;
+
+    overflow-y: auto;
+}
+
+
+/* =========================================
+   AGENT MAIN CONTENT
+========================================= */
+
+#agentDashboardContainer .app-main {
+    margin-left: 250px;
+
+    width: calc(100% - 250px);
+
+    min-height: 100vh;
+
+    box-sizing: border-box;
+
+    overflow-x: hidden;
+}
+
+
+/* =========================================
+   AGENT TOPBAR
+========================================= */
+
+#agentDashboardContainer .topbar {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   AGENT PAGES
+========================================= */
+
+#agentDashboardContainer .app-page {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   MOBILE AGENT LAYOUT
+========================================= */
+
+@media (max-width: 768px) {
+
+    #agentDashboardContainer #agentSidebar {
+
+        width: 250px;
+        min-width: 250px;
+
+        transform: translateX(-100%);
+
+        transition:
+            transform 0.25s ease;
+
+        z-index: 2000;
+    }
+
+
+    #agentDashboardContainer
+    #agentSidebar.open {
+
+        transform: translateX(0);
+    }
+
+
+    #agentDashboardContainer .app-main {
+
+        margin-left: 0;
+
+        width: 100%;
+
+        min-height: 100vh;
+    }
+
+}

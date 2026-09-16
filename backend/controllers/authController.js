@@ -50,6 +50,7 @@ const registerOwner = async (req, res) => {
       storeEmail,
       storeAddress,
       businessType,
+      referralCode,
        termsAccepted,
     } = req.body;
 
@@ -110,6 +111,15 @@ const registerOwner = async (req, res) => {
       phone
         ? phone.trim()
         : undefined;
+
+      /* -----------------------------------------
+   NORMALIZE AGENT REFERRAL CODE
+----------------------------------------- */
+
+const normalizedReferralCode =
+  referralCode
+    ? referralCode.trim().toUpperCase()
+    : "";
 
 
     /* -----------------------------------------
@@ -181,6 +191,35 @@ const registerOwner = async (req, res) => {
 
     }
 
+    /* -----------------------------------------
+   FIND REFERRING AGENT
+----------------------------------------- */
+
+let referringAgent = null;
+
+if (normalizedReferralCode) {
+
+  referringAgent =
+    await Agent.findOne({
+      referralCode:
+        normalizedReferralCode,
+      applicationStatus:
+        "approved",
+      status:
+        "active",
+    });
+
+  if (!referringAgent) {
+
+    return res.status(400).json({
+      success: false,
+      message:
+        "The Agent referral code is invalid or the Agent is not currently active.",
+    });
+
+  }
+
+}
 
     /* -----------------------------------------
        PASSWORD HASH
@@ -258,6 +297,20 @@ const registerOwner = async (req, res) => {
 
         ownerId:
           owner._id,
+
+        /* -----------------------------------------
+   AGENT REFERRAL
+----------------------------------------- */
+
+agentId:
+  referringAgent
+    ? referringAgent._id
+    : null,
+
+agentReferralCode:
+  referringAgent
+    ? referringAgent.referralCode
+    : null,
 
         storeName:
           storeName.trim(),

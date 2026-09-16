@@ -577,6 +577,446 @@ window.addEventListener(
 );
 
 
+/* =========================================
+   AGENT SUSPENSION CHECK
+========================================= */
+
+let agentSuspensionCheckInterval =
+    null;
+
+let agentSuspensionActive =
+    false;
+
+
+/* =========================================
+   SHOW AGENT SUSPENSION
+========================================= */
+
+function showAgentSuspension(details = {}) {
+
+    if (agentSuspensionActive) {
+        return;
+    }
+
+    agentSuspensionActive = true;
+
+    const existingOverlay =
+        document.getElementById(
+            "agentSuspensionOverlay"
+        );
+
+    if (existingOverlay) {
+        return;
+    }
+
+    const overlay =
+        document.createElement("div");
+
+    overlay.id =
+        "agentSuspensionOverlay";
+
+    overlay.innerHTML = `
+        <div
+            style="
+                position:fixed;
+                inset:0;
+                background:rgba(0,0,0,0.92);
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                padding:20px;
+                z-index:999999;
+                box-sizing:border-box;
+            "
+        >
+
+            <div
+                style="
+                    width:100%;
+                    max-width:460px;
+                    background:#151515;
+                    border-radius:16px;
+                    padding:30px 24px;
+                    box-sizing:border-box;
+                    text-align:center;
+                    color:white;
+                    box-shadow:
+                        0 10px 40px
+                        rgba(0,0,0,0.5);
+                "
+            >
+
+                <div
+                    style="
+                        width:70px;
+                        height:70px;
+                        margin:0 auto 20px;
+                        border-radius:50%;
+                        background:
+                            rgba(255,0,0,0.12);
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        font-size:34px;
+                    "
+                >
+                    ⚠️
+                </div>
+
+                <h2
+                    style="
+                        margin:0 0 12px;
+                        font-size:25px;
+                        color:#ff4d4d;
+                    "
+                >
+                    Agent Suspended
+                </h2>
+
+                <p
+                    style="
+                        margin:0 0 20px;
+                        line-height:1.6;
+                        color:#eeeeee;
+                        font-size:15px;
+                    "
+                >
+                    ${
+                        details.message ||
+                        "Your Agent account has been suspended by Blaiz Administration."
+                    }
+                </p>
+
+                ${
+                    details.reason
+                        ? `
+                            <div
+                                style="
+                                    background:#222222;
+                                    border-radius:10px;
+                                    padding:15px;
+                                    margin-bottom:20px;
+                                    text-align:left;
+                                "
+                            >
+                                <div
+                                    style="
+                                        color:#aaaaaa;
+                                        font-size:13px;
+                                        margin-bottom:6px;
+                                    "
+                                >
+                                    Suspension Reason
+                                </div>
+
+                                <div
+                                    style="
+                                        font-size:14px;
+                                        line-height:1.5;
+                                    "
+                                >
+                                    ${details.reason}
+                                </div>
+                            </div>
+                        `
+                        : ""
+                }
+
+                <button
+                    id="agentSuspensionLogoutBtn"
+                    type="button"
+                    style="
+                        width:100%;
+                        border:none;
+                        border-radius:10px;
+                        padding:14px;
+                        background:#ff4d4d;
+                        color:white;
+                        font-size:16px;
+                        font-weight:700;
+                        cursor:pointer;
+                    "
+                >
+                    Logout
+                </button>
+
+            </div>
+
+        </div>
+    `;
+
+    document.body.appendChild(
+        overlay
+    );
+
+    const logoutButton =
+        document.getElementById(
+            "agentSuspensionLogoutBtn"
+        );
+
+    if (logoutButton) {
+
+        logoutButton.addEventListener(
+            "click",
+            () => {
+
+                clearSession();
+
+                agentSuspensionActive =
+                    false;
+
+                if (
+                    agentSuspensionCheckInterval
+                ) {
+                    clearInterval(
+                        agentSuspensionCheckInterval
+                    );
+
+                    agentSuspensionCheckInterval =
+                        null;
+                }
+
+                overlay.remove();
+
+                showAuthentication();
+            }
+        );
+    }
+}
+
+
+/* =========================================
+   CHECK AGENT SESSION STATUS
+========================================= */
+
+async function checkAgentSessionStatus() {
+
+    const currentUser =
+        getUser();
+
+    if (
+        !currentUser ||
+        currentUser.accountType !==
+            "agent"
+    ) {
+        return;
+    }
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/agents/session-status",
+                {
+                    method:"GET"
+                }
+            );
+
+        if (
+            result &&
+            result.success &&
+            result.agent
+        ) {
+
+            if (
+                result.agent.status ===
+                "suspended"
+            ) {
+
+                showAgentSuspension({
+                    message:
+                        "Your Agent account has been suspended by Blaiz Administration.",
+
+                    reason:
+                        result.agent.rejectionReason ||
+                        null
+                });
+
+                return;
+            }
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Agent session status check:",
+            error.message
+        );
+    }
+}
+
+
+/* =========================================
+   START AGENT SUSPENSION CHECK
+========================================= */
+
+function startAgentSuspensionCheck() {
+
+    if (
+        agentSuspensionCheckInterval
+    ) {
+        return;
+    }
+
+    setTimeout(
+        async () => {
+
+            await checkAgentSessionStatus();
+
+        },
+        3000
+    );
+
+    agentSuspensionCheckInterval =
+        setInterval(
+            async () => {
+
+                const currentUser =
+                    getUser();
+
+                if (
+                    !currentUser ||
+                    currentUser.accountType !==
+                        "agent"
+                ) {
+
+                    clearInterval(
+                        agentSuspensionCheckInterval
+                    );
+
+                    agentSuspensionCheckInterval =
+                        null;
+
+                    return;
+                }
+
+                await checkAgentSessionStatus();
+
+            },
+            3000
+        );
+}
+
+/* =========================================
+   START AGENT NOTIFICATION CHECK
+========================================= */
+
+let agentNotificationCheckInterval =
+    null;
+
+function startAgentNotificationCheck() {
+
+    if (
+        agentNotificationCheckInterval
+    ) {
+        return;
+    }
+
+    setTimeout(
+        async () => {
+
+            await loadAgentNotificationUnreadCount();
+            await checkForNewAgentNotification();
+
+        },
+        3000
+    );
+
+    agentNotificationCheckInterval =
+        setInterval(
+            async () => {
+
+                const currentUser =
+                    getUser();
+
+                if (
+                    !currentUser ||
+                    currentUser.accountType !==
+                        "agent"
+                ) {
+
+                    clearInterval(
+                        agentNotificationCheckInterval
+                    );
+
+                    agentNotificationCheckInterval =
+                        null;
+
+                    return;
+                }
+
+                await loadAgentNotificationUnreadCount();
+                await checkForNewAgentNotification();
+
+            },
+            10000
+        );
+}
+
+/* =========================================
+   CHECK FOR NEW AGENT NOTIFICATION
+========================================= */
+
+async function checkForNewAgentNotification() {
+
+    const currentUser =
+        getUser();
+
+    if (
+        !currentUser ||
+        currentUser.accountType !==
+            "agent"
+    ) {
+        return;
+    }
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/agent-notifications",
+                {
+                    method: "GET"
+                }
+            );
+
+        if (
+            !result ||
+            !result.success
+        ) {
+            return;
+        }
+
+        const notifications =
+            result.notifications || [];
+
+        if (!notifications.length) {
+            return;
+        }
+
+        const latestNotification =
+            notifications[0];
+
+        if (
+            latestNotification &&
+            !latestNotification.isRead
+        ) {
+
+            showAgentNotificationPopup(
+                latestNotification
+            );
+
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Check Agent notification:",
+            error.message
+        );
+    }
+}
+
 /*
  * Periodically check the logged-in
  * user's authenticated session.
@@ -729,9 +1169,33 @@ function initializeApp() {
 
         if (isLoggedIn()) {
 
-            showApplication();
-            preloadStoreData();
-            startStoreSuspensionCheck();
+    const currentUser =
+        getUser();
+
+    /* =========================================
+       RESTORE AGENT SESSION
+    ========================================= */
+
+    if (
+        currentUser &&
+        currentUser.accountType === "agent"
+    ) {
+
+        showAgentDashboard();
+
+    } else {
+
+        /* =========================================
+           RESTORE OWNER / WORKER SESSION
+        ========================================= */
+
+        showApplication();
+
+        preloadStoreData();
+
+        startStoreSuspensionCheck();
+
+    }
 
 
             /*
@@ -952,9 +1416,1312 @@ function showAgentDashboard() {
 
     setupAgentNavigation();
 
+    loadAgentNotificationUnreadCount();
+    startAgentNotificationCheck();
+
     console.log(
         "Agent dashboard opened."
     );
+
+    loadAgentDashboard();
+    startAgentSuspensionCheck();
+}
+
+/* =========================================
+   LOAD AGENT DASHBOARD DATA
+========================================= */
+
+async function loadAgentDashboard() {
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/agents/dashboard",
+                {
+                    method: "GET"
+                }
+            );
+
+
+        if (
+            !result ||
+            !result.success ||
+            !result.dashboard
+        ) {
+
+            console.error(
+                "Invalid Agent dashboard response.",
+                result
+            );
+
+            return;
+        }
+
+
+        const dashboard =
+            result.dashboard;
+
+
+        /* =========================================
+           DASHBOARD COUNTS
+        ========================================= */
+
+        const referredStoresCount =
+            document.getElementById(
+                "agentReferredStoresCount"
+            );
+
+        const premiumStoresCount =
+            document.getElementById(
+                "agentPremiumStoresCount"
+            );
+
+        const totalEarnings =
+            document.getElementById(
+                "agentTotalEarnings"
+            );
+
+        const pendingCommission =
+            document.getElementById(
+                "agentPendingCommission"
+            );
+
+
+        if (referredStoresCount) {
+
+            referredStoresCount.textContent =
+                dashboard.referredStoresCount ?? 0;
+
+        }
+
+
+        if (premiumStoresCount) {
+
+            premiumStoresCount.textContent =
+                dashboard.premiumStoresCount ?? 0;
+
+        }
+
+
+        if (totalEarnings) {
+
+            totalEarnings.textContent =
+                `₦${Number(
+                    dashboard.totalEarnings || 0
+                ).toLocaleString()}`;
+
+        }
+
+
+        if (pendingCommission) {
+
+            pendingCommission.textContent =
+                `₦${Number(
+                    dashboard.pendingCommission || 0
+                ).toLocaleString()}`;
+
+        }
+
+
+        /* =========================================
+           REFERRAL CODE
+        ========================================= */
+
+        const referralCode =
+            document.getElementById(
+                "agentReferralCode"
+            );
+
+
+        if (referralCode) {
+
+            referralCode.textContent =
+                dashboard.referralCode || "—";
+
+        }
+
+
+        /* =========================================
+           REFERRAL LINK
+        ========================================= */
+
+        const referralLink =
+            document.getElementById(
+                "agentReferralLink"
+            );
+
+
+        if (referralLink) {
+
+            const code =
+                dashboard.referralCode || "";
+
+            if (code) {
+
+                const baseUrl =
+                    window.location.origin;
+
+                referralLink.value =
+                    `${baseUrl}/?ref=${encodeURIComponent(code)}`;
+
+            } else {
+
+                referralLink.value = "";
+
+            }
+
+        }
+
+
+        /* =========================================
+           RECENT REFERRED STORES
+        ========================================= */
+
+        const recentStoresList =
+            document.getElementById(
+                "agentRecentStoresList"
+            );
+
+
+        if (recentStoresList) {
+
+            const stores =
+                dashboard.recentStores || [];
+
+
+            if (!stores.length) {
+
+                recentStoresList.innerHTML = `
+                    <div style="padding:15px;text-align:center;">
+                        No referred stores yet.
+                    </div>
+                `;
+
+            } else {
+
+                recentStoresList.innerHTML =
+                    stores.map((store) => {
+
+                        const storeName =
+                            store.storeName ||
+                            "Unnamed Store";
+
+                        const businessType =
+                            store.businessType ||
+                            "Business";
+
+                        const plan =
+                            store.plan === "premium"
+                                ? "Premium"
+                                : "Free";
+
+                        return `
+                            <div class="agent-recent-store-item"
+                                 style="padding:15px;border-bottom:1px solid rgba(128,128,128,0.15);">
+
+                                <div style="font-weight:600;">
+                                    ${storeName}
+                                </div>
+
+                                <div style="font-size:13px;opacity:0.7;margin-top:4px;">
+                                    ${businessType}
+                                </div>
+
+                                <div style="font-size:13px;margin-top:6px;">
+                                    ${plan}
+                                </div>
+
+                            </div>
+                        `;
+
+                    }).join("");
+
+            }
+
+        }
+
+
+        console.log(
+            "Agent dashboard data loaded successfully."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Load Agent dashboard error:",
+            error
+        );
+
+    }
+
+}
+
+/* =========================================
+   LOAD AGENT ACCOUNT DATA
+========================================= */
+
+async function loadAgentAccount() {
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/agents/account",
+                {
+                    method: "GET"
+                }
+            );
+
+
+        if (
+            !result ||
+            !result.success ||
+            !result.agent
+        ) {
+
+            console.error(
+                "Invalid Agent account response.",
+                result
+            );
+
+            return;
+        }
+
+
+        const agent =
+            result.agent;
+
+
+        /* =========================================
+           PROFILE DETAILS
+        ========================================= */
+
+        const profileDetails =
+            document.getElementById(
+                "agentProfileDetails"
+            );
+
+
+        if (profileDetails) {
+
+            profileDetails.innerHTML = `
+
+                <div
+                    style="
+                        display:grid;
+                        grid-template-columns:
+                            repeat(auto-fit,minmax(240px,1fr));
+                        gap:18px;
+                    "
+                >
+
+                    <div>
+                        <strong>Full Name</strong>
+                        <div style="margin-top:5px;">
+                            ${agent.fullName || "—"}
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <strong>Date of Birth</strong>
+                        <div style="margin-top:5px;">
+                            ${agent.dateOfBirth || "—"}
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <strong>NIN</strong>
+                        <div style="margin-top:5px;">
+                            ${agent.nin || "—"}
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <strong>Name Known To People</strong>
+                        <div style="margin-top:5px;">
+                            ${agent.nameKnownToPeople || "—"}
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <strong>Gender</strong>
+                        <div style="margin-top:5px;">
+                            ${agent.gender || "—"}
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <strong>Relationship Status</strong>
+                        <div style="margin-top:5px;">
+                            ${agent.relationshipStatus || "—"}
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <strong>Phone Number</strong>
+                        <div style="margin-top:5px;">
+                            ${agent.phone || "—"}
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <strong>Email</strong>
+                        <div style="margin-top:5px;">
+                            ${agent.email || "—"}
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <strong>Current Address</strong>
+                        <div style="margin-top:5px;">
+                            ${agent.currentAddress || "—"}
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <strong>State</strong>
+                        <div style="margin-top:5px;">
+                            ${agent.state || "—"}
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <strong>LGA</strong>
+                        <div style="margin-top:5px;">
+                            ${agent.lga || "—"}
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <strong>Home Address</strong>
+                        <div style="margin-top:5px;">
+                            ${agent.homeAddress || "—"}
+                        </div>
+                    </div>
+
+                </div>
+
+            `;
+
+        }
+
+
+        /* =========================================
+           BANK DETAILS
+        ========================================= */
+
+        const bankStatus =
+            document.getElementById(
+                "agentBankAccountStatus"
+            );
+
+
+        const bankButton =
+            document.getElementById(
+                "agentBankAccountBtn"
+            );
+
+
+        const hasBankDetails =
+            agent.bankAccountName &&
+            agent.bankAccountNumber &&
+            agent.bankName;
+
+
+        if (bankStatus) {
+
+            if (hasBankDetails) {
+
+                bankStatus.innerHTML = `
+
+                    <div>
+                        <strong>
+                            Account Name
+                        </strong>
+
+                        <div>
+                            ${agent.bankAccountName}
+                        </div>
+                    </div>
+
+
+                    <div style="margin-top:12px;">
+                        <strong>
+                            Account Number
+                        </strong>
+
+                        <div>
+                            ${agent.bankAccountNumber}
+                        </div>
+                    </div>
+
+
+                    <div style="margin-top:12px;">
+                        <strong>
+                            Bank Name
+                        </strong>
+
+                        <div>
+                            ${agent.bankName}
+                        </div>
+                    </div>
+
+                `;
+
+                if (bankButton) {
+
+                    bankButton.textContent =
+                        "Edit Bank Details";
+
+                }
+
+            } else {
+
+                bankStatus.innerHTML = `
+                    No bank details have been added yet.
+                `;
+
+                if (bankButton) {
+
+                    bankButton.textContent =
+                        "Add Bank Details";
+
+                }
+
+            }
+
+        }
+
+
+        console.log(
+            "Agent account data loaded successfully."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Load Agent account error:",
+            error
+        );
+
+    }
+
+}
+
+/* =========================================
+   EDIT AGENT PROFILE
+========================================= */
+
+async function openAgentProfileEditor() {
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/agents/account",
+                {
+                    method: "GET"
+                }
+            );
+
+
+        if (
+            !result ||
+            !result.success ||
+            !result.agent
+        ) {
+
+            showNotification(
+                "Unable to load profile."
+            );
+
+            return;
+        }
+
+
+        const agent =
+            result.agent;
+
+
+        openModal(`
+
+            <div>
+
+                <h2>
+                    Edit Profile
+                </h2>
+
+                <p
+                    style="
+                        margin-top:6px;
+                        opacity:0.7;
+                    "
+                >
+                    Update your editable Agent information.
+                </p>
+
+
+                <form
+                    id="agentEditProfileForm"
+                    style="
+                        margin-top:25px;
+                    "
+                >
+
+
+                    <!-- LOCKED INFORMATION -->
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            Full Name
+                        </label>
+
+                        <input
+                            type="text"
+                            value="${agent.fullName || ""}"
+                            disabled
+                        >
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            Date of Birth
+                        </label>
+
+                        <input
+                            type="text"
+                            value="${agent.dateOfBirth || ""}"
+                            disabled
+                        >
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            NIN
+                        </label>
+
+                        <input
+                            type="text"
+                            value="${agent.nin || ""}"
+                            disabled
+                        >
+
+                    </div>
+
+
+                    <!-- EDITABLE INFORMATION -->
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            Name Known To People
+                        </label>
+
+                        <input
+                            id="editAgentNameKnownToPeople"
+                            type="text"
+                            value="${agent.nameKnownToPeople || ""}"
+                        >
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            Gender
+                        </label>
+
+                        <input
+                            id="editAgentGender"
+                            type="text"
+                            value="${agent.gender || ""}"
+                        >
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            Relationship Status
+                        </label>
+
+                        <input
+                            id="editAgentRelationshipStatus"
+                            type="text"
+                            value="${agent.relationshipStatus || ""}"
+                        >
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            Phone Number
+                        </label>
+
+                        <input
+                            id="editAgentPhone"
+                            type="tel"
+                            value="${agent.phone || ""}"
+                        >
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            Email
+                        </label>
+
+                        <input
+                            id="editAgentEmail"
+                            type="email"
+                            value="${agent.email || ""}"
+                        >
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            Current Address
+                        </label>
+
+                        <textarea
+                            id="editAgentCurrentAddress"
+                            rows="3"
+                        >${agent.currentAddress || ""}</textarea>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            State
+                        </label>
+
+                        <input
+                            id="editAgentState"
+                            type="text"
+                            value="${agent.state || ""}"
+                        >
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            LGA
+                        </label>
+
+                        <input
+                            id="editAgentLGA"
+                            type="text"
+                            value="${agent.lga || ""}"
+                        >
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            Home Address
+                        </label>
+
+                        <textarea
+                            id="editAgentHomeAddress"
+                            rows="3"
+                        >${agent.homeAddress || ""}</textarea>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="primary-btn"
+                        style="
+                            width:100%;
+                            margin-top:10px;
+                        "
+                    >
+                        Save Profile
+                    </button>
+
+
+                </form>
+
+            </div>
+
+        `);
+
+
+        const form =
+            document.getElementById(
+                "agentEditProfileForm"
+            );
+
+
+        if (!form) return;
+
+
+        form.addEventListener(
+            "submit",
+            async (event) => {
+
+                event.preventDefault();
+
+
+                const submitButton =
+                    form.querySelector(
+                        'button[type="submit"]'
+                    );
+
+
+                if (submitButton) {
+
+                    submitButton.disabled =
+                        true;
+
+                    submitButton.textContent =
+                        "Saving...";
+
+                }
+
+
+                try {
+
+                    const updateResult =
+                        await apiRequest(
+                            "/agents/account/profile",
+                            {
+                                method: "PUT",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify({
+
+                                        nameKnownToPeople:
+                                            document
+                                                .getElementById(
+                                                    "editAgentNameKnownToPeople"
+                                                )
+                                                .value
+                                                .trim(),
+
+                                        gender:
+                                            document
+                                                .getElementById(
+                                                    "editAgentGender"
+                                                )
+                                                .value
+                                                .trim(),
+
+                                        relationshipStatus:
+                                            document
+                                                .getElementById(
+                                                    "editAgentRelationshipStatus"
+                                                )
+                                                .value
+                                                .trim(),
+
+                                        phone:
+                                            document
+                                                .getElementById(
+                                                    "editAgentPhone"
+                                                )
+                                                .value
+                                                .trim(),
+
+                                        email:
+                                            document
+                                                .getElementById(
+                                                    "editAgentEmail"
+                                                )
+                                                .value
+                                                .trim(),
+
+                                        currentAddress:
+                                            document
+                                                .getElementById(
+                                                    "editAgentCurrentAddress"
+                                                )
+                                                .value
+                                                .trim(),
+
+                                        state:
+                                            document
+                                                .getElementById(
+                                                    "editAgentState"
+                                                )
+                                                .value
+                                                .trim(),
+
+                                        lga:
+                                            document
+                                                .getElementById(
+                                                    "editAgentLGA"
+                                                )
+                                                .value
+                                                .trim(),
+
+                                        homeAddress:
+                                            document
+                                                .getElementById(
+                                                    "editAgentHomeAddress"
+                                                )
+                                                .value
+                                                .trim()
+
+                                    })
+                            }
+                        );
+
+
+                    if (
+                        !updateResult ||
+                        !updateResult.success
+                    ) {
+
+                        showNotification(
+                            updateResult?.message ||
+                            "Failed to update profile."
+                        );
+
+                        return;
+                    }
+
+
+                    closeModal();
+
+
+                    showNotification(
+                        "Profile updated successfully."
+                    );
+
+
+                    await loadAgentAccount();
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Update Agent profile error:",
+                        error
+                    );
+
+
+                    showNotification(
+                        "Failed to update profile."
+                    );
+
+                } finally {
+
+                    if (submitButton) {
+
+                        submitButton.disabled =
+                            false;
+
+                        submitButton.textContent =
+                            "Save Profile";
+
+                    }
+
+                }
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Open Agent profile editor error:",
+            error
+        );
+
+
+        showNotification(
+            "Unable to load profile."
+        );
+
+    }
+
+}
+
+/* =========================================
+   EDIT AGENT BANK DETAILS
+========================================= */
+
+async function openAgentBankEditor() {
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/agents/account",
+                {
+                    method: "GET"
+                }
+            );
+
+
+        if (
+            !result ||
+            !result.success ||
+            !result.agent
+        ) {
+
+            showNotification(
+                "Unable to load bank details."
+            );
+
+            return;
+        }
+
+
+        const agent =
+            result.agent;
+
+
+        openModal(`
+
+            <div>
+
+                <h2>
+                    Bank Details
+                </h2>
+
+                <p
+                    style="
+                        margin-top:6px;
+                        opacity:0.7;
+                    "
+                >
+                    Enter the bank account where your
+                    commissions will be paid.
+                </p>
+
+
+                <form
+                    id="agentBankDetailsForm"
+                    style="
+                        margin-top:25px;
+                    "
+                >
+
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            Account Name
+                        </label>
+
+                        <input
+                            id="agentBankAccountName"
+                            type="text"
+                            value="${agent.bankAccountName || ""}"
+                            placeholder="Enter account name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            Account Number
+                        </label>
+
+                        <input
+                            id="agentBankAccountNumber"
+                            type="tel"
+                            inputmode="numeric"
+                            maxlength="10"
+                            value="${agent.bankAccountNumber || ""}"
+                            placeholder="Enter 10-digit account number"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin-bottom:18px;
+                        "
+                    >
+
+                        <label>
+                            Bank Name
+                        </label>
+
+                        <input
+                            id="agentBankName"
+                            type="text"
+                            value="${agent.bankName || ""}"
+                            placeholder="Enter bank name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="primary-btn"
+                        style="
+                            width:100%;
+                            margin-top:10px;
+                        "
+                    >
+                        Save Bank Details
+                    </button>
+
+
+                </form>
+
+            </div>
+
+        `);
+
+
+        const form =
+            document.getElementById(
+                "agentBankDetailsForm"
+            );
+
+
+        if (!form) return;
+
+
+        form.addEventListener(
+            "submit",
+            async (event) => {
+
+                event.preventDefault();
+
+
+                const submitButton =
+                    form.querySelector(
+                        'button[type="submit"]'
+                    );
+
+
+                if (submitButton) {
+
+                    submitButton.disabled =
+                        true;
+
+                    submitButton.textContent =
+                        "Saving...";
+
+                }
+
+
+                try {
+
+                    const updateResult =
+                        await apiRequest(
+                            "/agents/account/bank",
+                            {
+                                method: "PUT",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body:
+                                    JSON.stringify({
+
+                                        bankAccountName:
+                                            document
+                                                .getElementById(
+                                                    "agentBankAccountName"
+                                                )
+                                                .value
+                                                .trim(),
+
+                                        bankAccountNumber:
+                                            document
+                                                .getElementById(
+                                                    "agentBankAccountNumber"
+                                                )
+                                                .value
+                                                .trim(),
+
+                                        bankName:
+                                            document
+                                                .getElementById(
+                                                    "agentBankName"
+                                                )
+                                                .value
+                                                .trim()
+
+                                    })
+                            }
+                        );
+
+
+                    if (
+                        !updateResult ||
+                        !updateResult.success
+                    ) {
+
+                        showNotification(
+                            updateResult?.message ||
+                            "Failed to save bank details."
+                        );
+
+                        return;
+                    }
+
+
+                    closeModal();
+
+
+                    showNotification(
+                        "Bank details saved successfully."
+                    );
+
+
+                    await loadAgentAccount();
+
+
+                } catch (error) {
+
+                    console.error(
+                        "Update Agent bank details error:",
+                        error
+                    );
+
+
+                    showNotification(
+                        "Failed to save bank details."
+                    );
+
+                } finally {
+
+                    if (submitButton) {
+
+                        submitButton.disabled =
+                            false;
+
+                        submitButton.textContent =
+                            "Save Bank Details";
+
+                    }
+
+                }
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Open Agent bank editor error:",
+            error
+        );
+
+
+        showNotification(
+            "Unable to load bank details."
+        );
+
+    }
+
 }
 
 /* =========================
@@ -962,6 +2729,34 @@ function showAgentDashboard() {
 ========================= */
 
 function setupAgentNavigation() {
+
+        const agentEditProfileBtn =
+        document.getElementById(
+            "agentEditProfileBtn"
+        );
+
+    if (agentEditProfileBtn) {
+
+        agentEditProfileBtn.addEventListener(
+            "click",
+            openAgentProfileEditor
+        );
+
+    }
+
+        const agentBankAccountBtn =
+        document.getElementById(
+            "agentBankAccountBtn"
+        );
+
+    if (agentBankAccountBtn) {
+
+        agentBankAccountBtn.addEventListener(
+            "click",
+            openAgentBankEditor
+        );
+
+    }
 
     const agentNavItems =
         document.querySelectorAll(
@@ -1022,6 +2817,23 @@ function setupAgentNavigation() {
         );
 
     }
+        const markAllAgentNotificationsReadBtn =
+        document.getElementById(
+            "agentMarkAllNotificationsReadBtn"
+        );
+
+    if (
+        markAllAgentNotificationsReadBtn &&
+        !markAllAgentNotificationsReadBtn.dataset.listenerAttached
+    ) {
+        markAllAgentNotificationsReadBtn.addEventListener(
+            "click",
+            markAllAgentNotificationsAsRead
+        );
+
+        markAllAgentNotificationsReadBtn.dataset.listenerAttached =
+            "true";
+    }
 }
 
 
@@ -1036,7 +2848,6 @@ function showAgentPage(pageName) {
             "#agentDashboardContainer .app-page"
         );
 
-
     agentPages.forEach(
         (page) => {
 
@@ -1044,6 +2855,7 @@ function showAgentPage(pageName) {
                 .remove(
                     "active-page"
                 );
+
         }
     );
 
@@ -1060,6 +2872,7 @@ function showAgentPage(pageName) {
             .add(
                 "active-page"
             );
+
     }
 
 
@@ -1087,11 +2900,1109 @@ function showAgentPage(pageName) {
                     .add(
                         "active"
                     );
+
             }
+
         }
+    );
+
+
+    /* =========================================
+       LOAD AGENT PAGE DATA
+    ========================================= */
+
+    if (pageName === "dashboard") {
+
+        loadAgentDashboard();
+
+    }
+
+
+    if (pageName === "stores") {
+
+        loadAgentStores();
+
+    }
+
+
+    if (pageName === "earnings") {
+
+        loadAgentEarnings();
+
+    }
+
+
+    if (pageName === "notifications") {
+
+        loadAgentNotifications();
+
+    }
+
+
+    if (pageName === "account") {
+
+        loadAgentAccount();
+
+    }
+
+
+    if (pageName === "support") {
+
+        loadAgentSupport();
+
+    }
+
+}
+
+/* =========================
+   AGENT MY STORES
+========================= */
+
+async function loadAgentStores() {
+
+    const storesList =
+        document.getElementById(
+            "agentStoresList"
+        );
+
+    if (!storesList) {
+        return;
+    }
+
+
+    storesList.innerHTML = `
+        <div class="notification-empty">
+            Loading referred stores...
+        </div>
+    `;
+
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/agents/dashboard",
+                {
+                    method: "GET"
+                }
+            );
+
+
+        if (
+            !result ||
+            !result.success ||
+            !result.dashboard
+        ) {
+
+            storesList.innerHTML = `
+                <div class="notification-empty">
+                    Unable to load referred stores.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        const stores =
+            result.dashboard.recentStores || [];
+
+
+        if (!stores.length) {
+
+            storesList.innerHTML = `
+                <div class="notification-empty">
+                    No referred stores yet.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        storesList.innerHTML =
+            stores.map(
+                (store) => {
+
+                    const storeName =
+                        store.storeName ||
+                        "Unnamed Store";
+
+                    const businessType =
+                        store.businessType ||
+                        "Business";
+
+                    const plan =
+                        store.plan ===
+                        "premium"
+                            ? "Premium"
+                            : "Free";
+
+                    const status =
+                        store.subscriptionStatus ||
+                        "inactive";
+
+
+                    return `
+                        <div
+                            class="agent-recent-store-item"
+                            style="
+                                padding:18px;
+                                border-bottom:
+                                    1px solid
+                                    rgba(128,128,128,0.15);
+                            "
+                        >
+
+                            <div
+                                style="
+                                    font-size:17px;
+                                    font-weight:700;
+                                "
+                            >
+                                ${storeName}
+                            </div>
+
+
+                            <div
+                                style="
+                                    font-size:14px;
+                                    opacity:0.7;
+                                    margin-top:6px;
+                                "
+                            >
+                                ${businessType}
+                            </div>
+
+
+                            <div
+                                style="
+                                    display:flex;
+                                    gap:10px;
+                                    flex-wrap:wrap;
+                                    margin-top:10px;
+                                "
+                            >
+
+                                <span
+                                    style="
+                                        font-size:13px;
+                                        font-weight:600;
+                                    "
+                                >
+                                    Plan:
+                                    ${plan}
+                                </span>
+
+
+                                <span
+                                    style="
+                                        font-size:13px;
+                                        font-weight:600;
+                                    "
+                                >
+                                    Status:
+                                    ${status}
+                                </span>
+
+                            </div>
+
+
+                            ${
+                                store.subscriptionExpiry
+                                    ? `
+                                        <div
+                                            style="
+                                                font-size:13px;
+                                                opacity:0.7;
+                                                margin-top:8px;
+                                            "
+                                        >
+                                            Subscription expiry:
+                                            ${new Date(
+                                                store.subscriptionExpiry
+                                            ).toLocaleDateString()}
+                                        </div>
+                                      `
+                                    : ""
+                            }
+
+                        </div>
+                    `;
+
+                }
+            ).join("");
+
+
+    } catch (error) {
+
+        console.error(
+            "Load Agent stores error:",
+            error
+        );
+
+
+        storesList.innerHTML = `
+            <div class="notification-empty">
+                Unable to load referred stores.
+            </div>
+        `;
+
+    }
+
+}
+
+/* =========================================
+   SHOW AGENT NOTIFICATION POPUP
+========================================= */
+
+function showAgentNotificationPopup(
+    notification
+) {
+
+    if (!notification) {
+        return;
+    }
+
+    const existingPopup =
+        document.getElementById(
+            "agentNotificationPopup"
+        );
+
+    if (existingPopup) {
+        existingPopup.remove();
+    }
+
+    const popup =
+        document.createElement("div");
+
+    popup.id =
+        "agentNotificationPopup";
+
+    popup.innerHTML = `
+        <div
+            style="
+                position:fixed;
+                top:20px;
+                right:20px;
+                width:calc(100% - 40px);
+                max-width:380px;
+                background:#151515;
+                color:white;
+                border-radius:14px;
+                padding:18px;
+                box-sizing:border-box;
+                box-shadow:
+                    0 10px 35px
+                    rgba(0,0,0,0.45);
+                z-index:999998;
+                border-left:
+                    4px solid #ff4d4d;
+            "
+        >
+
+            <div
+                style="
+                    display:flex;
+                    align-items:flex-start;
+                    justify-content:space-between;
+                    gap:15px;
+                "
+            >
+
+                <div
+                    style="
+                        flex:1;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-size:13px;
+                            opacity:0.65;
+                            margin-bottom:5px;
+                        "
+                    >
+                        Agent Notification
+                    </div>
+
+                    <div
+                        style="
+                            font-size:16px;
+                            font-weight:700;
+                            margin-bottom:7px;
+                        "
+                    >
+                        ${
+                            notification.title ||
+                            "New Notification"
+                        }
+                    </div>
+
+                    <div
+                        style="
+                            font-size:14px;
+                            line-height:1.5;
+                            opacity:0.9;
+                        "
+                    >
+                        ${
+                            notification.message ||
+                            ""
+                        }
+                    </div>
+
+                </div>
+
+                <button
+                    id="closeAgentNotificationPopup"
+                    type="button"
+                    style="
+                        border:none;
+                        background:transparent;
+                        color:white;
+                        font-size:20px;
+                        cursor:pointer;
+                        padding:0;
+                        line-height:1;
+                    "
+                >
+                    ×
+                </button>
+
+            </div>
+
+        </div>
+    `;
+
+    document.body.appendChild(
+        popup
+    );
+
+    const closeButton =
+        document.getElementById(
+            "closeAgentNotificationPopup"
+        );
+
+    if (closeButton) {
+
+        closeButton.addEventListener(
+            "click",
+            () => {
+                popup.remove();
+            }
+        );
+    }
+
+    setTimeout(
+        () => {
+
+            if (
+                document.getElementById(
+                    "agentNotificationPopup"
+                )
+            ) {
+                popup.remove();
+            }
+
+        },
+        7000
     );
 }
 
+/* =========================================
+   LOAD AGENT NOTIFICATIONS
+========================================= */
+
+async function loadAgentNotifications() {
+
+    const notificationsList =
+        document.getElementById(
+            "agentNotificationsList"
+        );
+
+    if (!notificationsList) {
+        return;
+    }
+
+    notificationsList.innerHTML = `
+        <div class="notification-empty">
+            Loading notifications...
+        </div>
+    `;
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/agent-notifications",
+                {
+                    method: "GET"
+                }
+            );
+
+        if (
+            !result ||
+            !result.success
+        ) {
+
+            notificationsList.innerHTML = `
+                <div class="notification-empty">
+                    Unable to load notifications.
+                </div>
+            `;
+
+            return;
+        }
+
+        const notifications =
+            result.notifications || [];
+
+        if (!notifications.length) {
+
+            notificationsList.innerHTML = `
+                <div class="notification-empty">
+                    No notifications yet.
+                </div>
+            `;
+
+            updateAgentNotificationBadge(0);
+
+            return;
+        }
+
+        const unreadCount =
+            notifications.filter(
+                notification =>
+                    !notification.isRead
+            ).length;
+
+        updateAgentNotificationBadge(
+            unreadCount
+        );
+
+        notificationsList.innerHTML =
+            notifications.map(
+                notification => {
+
+                    const unread =
+                        !notification.isRead;
+
+                    const createdAt =
+                        notification.createdAt
+                            ? new Date(
+                                notification.createdAt
+                              ).toLocaleString()
+                            : "";
+
+                    return `
+                        <div
+                            class="
+                                agent-notification-item
+                                ${
+                                    unread
+                                        ? "unread"
+                                        : "read"
+                                }
+                            "
+                            data-notification-id="${
+                                notification._id
+                            }"
+                            style="
+                                padding:18px;
+                                border-bottom:
+                                    1px solid
+                                    rgba(
+                                        128,
+                                        128,
+                                        128,
+                                        0.15
+                                    );
+                                cursor:pointer;
+                                ${
+                                    unread
+                                        ? "font-weight:600;"
+                                        : "opacity:0.65;"
+                                }
+                            "
+                        >
+
+                            <div
+                                style="
+                                    display:flex;
+                                    justify-content:
+                                        space-between;
+                                    gap:15px;
+                                    align-items:
+                                        flex-start;
+                                "
+                            >
+
+                                <div
+                                    style="
+                                        flex:1;
+                                    "
+                                >
+
+                                    <div
+                                        style="
+                                            font-size:16px;
+                                            font-weight:700;
+                                            margin-bottom:6px;
+                                        "
+                                    >
+                                        ${
+                                            notification.title ||
+                                            "Notification"
+                                        }
+                                    </div>
+
+                                    <div
+                                        style="
+                                            font-size:14px;
+                                            line-height:1.5;
+                                            font-weight:400;
+                                        "
+                                    >
+                                        ${
+                                            notification.message ||
+                                            ""
+                                        }
+                                    </div>
+
+                                    ${
+                                        notification.reference
+                                            ? `
+                                                <div
+                                                    style="
+                                                        font-size:12px;
+                                                        opacity:0.7;
+                                                        margin-top:8px;
+                                                        font-weight:400;
+                                                    "
+                                                >
+                                                    Reference:
+                                                    ${
+                                                        notification.reference
+                                                    }
+                                                </div>
+                                            `
+                                            : ""
+                                    }
+
+                                    ${
+                                        createdAt
+                                            ? `
+                                                <div
+                                                    style="
+                                                        font-size:12px;
+                                                        opacity:0.55;
+                                                        margin-top:8px;
+                                                        font-weight:400;
+                                                    "
+                                                >
+                                                    ${createdAt}
+                                                </div>
+                                            `
+                                            : ""
+                                    }
+
+                                </div>
+
+                                ${
+                                    unread
+                                        ? `
+                                            <span
+                                                style="
+                                                    width:9px;
+                                                    height:9px;
+                                                    min-width:9px;
+                                                    border-radius:50%;
+                                                    background:#ff4d4d;
+                                                    margin-top:5px;
+                                                "
+                                            ></span>
+                                        `
+                                        : ""
+                                }
+
+                            </div>
+
+                        </div>
+                    `;
+                }
+            ).join("");
+
+        /*
+         * Attach click handlers after
+         * notifications have been rendered.
+         */
+
+        notificationsList
+            .querySelectorAll(
+                ".agent-notification-item"
+            )
+            .forEach(
+                item => {
+
+                    item.addEventListener(
+                        "click",
+                        async () => {
+
+                            const id =
+                                item.dataset
+                                    .notificationId;
+
+                            if (id) {
+
+                                await markAgentNotificationAsRead(
+                                    id
+                                );
+                            }
+                        }
+                    );
+                }
+            );
+
+    } catch (error) {
+
+        console.error(
+            "Load Agent notifications error:",
+            error
+        );
+
+        notificationsList.innerHTML = `
+            <div class="notification-empty">
+                Unable to load notifications.
+            </div>
+        `;
+    }
+}
+
+
+/* =========================================
+   MARK ONE AGENT NOTIFICATION AS READ
+========================================= */
+
+async function markAgentNotificationAsRead(
+    notificationId
+) {
+
+    try {
+
+        const result =
+            await apiRequest(
+                `/agent-notifications/${encodeURIComponent(
+                    notificationId
+                )}/read`,
+                {
+                    method: "PATCH"
+                }
+            );
+
+        if (
+            result &&
+            result.success
+        ) {
+
+            await loadAgentNotifications();
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Mark Agent notification as read error:",
+            error
+        );
+    }
+}
+
+
+/* =========================================
+   MARK ALL AGENT NOTIFICATIONS AS READ
+========================================= */
+
+async function markAllAgentNotificationsAsRead() {
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/agent-notifications/read-all",
+                {
+                    method: "PATCH"
+                }
+            );
+
+        if (
+            result &&
+            result.success
+        ) {
+
+            await loadAgentNotifications();
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Mark all Agent notifications as read error:",
+            error
+        );
+    }
+}
+
+/* =========================================
+   LOAD AGENT UNREAD NOTIFICATION COUNT
+========================================= */
+
+async function loadAgentNotificationUnreadCount() {
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/agent-notifications/unread-count",
+                {
+                    method: "GET"
+                }
+            );
+
+        if (
+            result &&
+            result.success
+        ) {
+
+            updateAgentNotificationBadge(
+                Number(result.count || 0)
+            );
+        }
+
+    } catch (error) {
+
+        console.log(
+            "Load Agent unread notification count:",
+            error.message
+        );
+    }
+}
+
+/* =========================================
+   UPDATE AGENT NOTIFICATION BADGE
+========================================= */
+
+function updateAgentNotificationBadge(
+    count
+) {
+
+    const notificationButton =
+        document.querySelector(
+            '#agentDashboardContainer [data-agent-page="notifications"]'
+        );
+
+    if (!notificationButton) {
+        return;
+    }
+
+    let badge =
+        notificationButton.querySelector(
+            ".agent-notification-badge"
+        );
+
+    if (!count || count <= 0) {
+
+        if (badge) {
+            badge.remove();
+        }
+
+        return;
+    }
+
+    if (!badge) {
+
+        badge =
+            document.createElement(
+                "span"
+            );
+
+        badge.className =
+            "agent-notification-badge";
+
+        badge.style.cssText = `
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-width:20px;
+            height:20px;
+            padding:0 6px;
+            margin-left:8px;
+            border-radius:10px;
+            background:#ff4d4d;
+            color:white;
+            font-size:11px;
+            font-weight:700;
+        `;
+
+        notificationButton.appendChild(
+            badge
+        );
+    }
+
+    badge.textContent =
+        count > 99
+            ? "99+"
+            : String(count);
+}
+
+/* =========================
+   AGENT EARNINGS
+========================= */
+
+async function loadAgentEarnings() {
+
+    const earningsContent =
+        document.getElementById(
+            "agentEarningsContent"
+        );
+
+    if (!earningsContent) {
+        return;
+    }
+
+
+    earningsContent.innerHTML = `
+        <div class="notification-empty">
+            Loading earnings...
+        </div>
+    `;
+
+
+    try {
+
+        const result =
+            await apiRequest(
+                "/agents/dashboard",
+                {
+                    method: "GET"
+                }
+            );
+
+
+        if (
+            !result ||
+            !result.success ||
+            !result.dashboard
+        ) {
+
+            earningsContent.innerHTML = `
+                <div class="notification-empty">
+                    Unable to load earnings.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        const dashboard =
+            result.dashboard;
+
+
+        const totalEarnings =
+            Number(
+                dashboard.totalEarnings || 0
+            );
+
+
+        const pendingCommission =
+            Number(
+                dashboard.pendingCommission || 0
+            );
+
+
+        const referredStores =
+            Number(
+                dashboard.referredStoresCount || 0
+            );
+
+
+        const premiumStores =
+            Number(
+                dashboard.premiumStoresCount || 0
+            );
+
+
+        earningsContent.innerHTML = `
+
+            <div
+                style="
+                    display:grid;
+                    grid-template-columns:
+                        repeat(
+                            auto-fit,
+                            minmax(200px, 1fr)
+                        );
+                    gap:15px;
+                    margin-bottom:25px;
+                "
+            >
+
+                <div
+                    class="content-card"
+                    style="
+                        margin:0;
+                        padding:20px;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-size:13px;
+                            opacity:0.7;
+                            margin-bottom:8px;
+                        "
+                    >
+                        Total Earnings
+                    </div>
+
+                    <div
+                        style="
+                            font-size:24px;
+                            font-weight:800;
+                        "
+                    >
+                        ₦${totalEarnings.toLocaleString()}
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="content-card"
+                    style="
+                        margin:0;
+                        padding:20px;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-size:13px;
+                            opacity:0.7;
+                            margin-bottom:8px;
+                        "
+                    >
+                        Pending Commission
+                    </div>
+
+                    <div
+                        style="
+                            font-size:24px;
+                            font-weight:800;
+                        "
+                    >
+                        ₦${pendingCommission.toLocaleString()}
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="content-card"
+                    style="
+                        margin:0;
+                        padding:20px;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-size:13px;
+                            opacity:0.7;
+                            margin-bottom:8px;
+                        "
+                    >
+                        Referred Stores
+                    </div>
+
+                    <div
+                        style="
+                            font-size:24px;
+                            font-weight:800;
+                        "
+                    >
+                        ${referredStores}
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="content-card"
+                    style="
+                        margin:0;
+                        padding:20px;
+                    "
+                >
+
+                    <div
+                        style="
+                            font-size:13px;
+                            opacity:0.7;
+                            margin-bottom:8px;
+                        "
+                    >
+                        Premium Stores
+                    </div>
+
+                    <div
+                        style="
+                            font-size:24px;
+                            font-weight:800;
+                        "
+                    >
+                        ${premiumStores}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div
+                style="
+                    padding:15px;
+                    border-radius:10px;
+                    background:
+                        rgba(128,128,128,0.08);
+                    font-size:14px;
+                    line-height:1.6;
+                "
+            >
+                Commission details and payment history
+                will appear here once commission rules
+                are configured by Blaiz Administration.
+            </div>
+
+        `;
+
+
+    } catch (error) {
+
+        console.error(
+            "Load Agent earnings error:",
+            error
+        );
+
+
+        earningsContent.innerHTML = `
+            <div class="notification-empty">
+                Unable to load earnings.
+            </div>
+        `;
+
+    }
+
+}
 
 /* =========================
    CAPITALIZE FIRST LETTER
@@ -2159,6 +5070,13 @@ registerForm.addEventListener(
             )
             .value;
 
+        const referralCode =
+    document.getElementById(
+        "registerReferralCode"
+    )
+    .value
+    .trim();
+
                     const termsAccepted =
             document.getElementById(
                 "registerTermsAccepted"
@@ -2223,6 +5141,7 @@ registerForm.addEventListener(
                 email,
                 phone,
                 password,
+                referralCode,
                  termsAccepted
             });
 
