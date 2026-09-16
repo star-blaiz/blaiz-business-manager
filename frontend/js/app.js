@@ -18,6 +18,10 @@ import {
     initializeSupport
 } from "./support.js";
 
+import {
+    initializeAgentSupport
+} from "./agentSupport.js";
+
 /* =========================
    ANDROID PAYMENT DEEP LINK
 ========================= */
@@ -1728,7 +1732,17 @@ async function loadAgentAccount() {
                     <div>
                         <strong>Date of Birth</strong>
                         <div style="margin-top:5px;">
-                            ${agent.dateOfBirth || "—"}
+                            ${agent.dateOfBirth
+    ? new Date(agent.dateOfBirth).toLocaleDateString(
+        "en-GB",
+        {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        }
+    )
+    : "Not provided"
+}
                         </div>
                     </div>
 
@@ -1971,16 +1985,17 @@ async function openAgentProfileEditor() {
                         opacity:0.7;
                     "
                 >
-                    Update your editable Agent information.
+                    Update your Agent information.
                 </p>
 
 
                 <form
-                    id="agentEditProfileForm"
-                    style="
-                        margin-top:25px;
-                    "
-                >
+    id="agentEditProfileForm"
+    class="agent-profile-form"
+    style="
+        margin-top:25px;
+    "
+>
 
 
                     <!-- LOCKED INFORMATION -->
@@ -2948,7 +2963,8 @@ function showAgentPage(pageName) {
 
     if (pageName === "support") {
 
-        loadAgentSupport();
+        
+            initializeAgentSupport();
 
     }
 

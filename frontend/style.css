@@ -1773,3 +1773,157 @@ button {
     }
 
 }
+
+/* =========================================
+   AGENT PROFILE EDIT FORM
+========================================= */
+
+.agent-profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.agent-profile-form > div {
+    margin-bottom: 18px !important;
+}
+
+.agent-profile-form label {
+    display: block;
+    margin-bottom: 7px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.agent-profile-form input,
+.agent-profile-form textarea {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1px solid rgba(128, 128, 128, 0.3);
+    border-radius: 10px;
+    background: transparent;
+    font-size: 14px;
+    outline: none;
+}
+
+.agent-profile-form textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.agent-profile-form input:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    background: rgba(128, 128, 128, 0.08);
+}
+
+.agent-profile-form button[type="submit"] {
+    width: 100%;
+    margin-top: 5px !important;
+}
+
+
+/* =========================================
+   PROFILE FORM GRID
+========================================= */
+
+@media (min-width: 700px) {
+
+    .agent-profile-form {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 20px;
+        row-gap: 0;
+    }
+
+    .agent-profile-form > div:nth-of-type(1),
+    .agent-profile-form > div:nth-of-type(2),
+    .agent-profile-form > div:nth-of-type(3) {
+        grid-column: span 1;
+    }
+
+    .agent-profile-form > div:nth-of-type(7),
+    .agent-profile-form > div:nth-of-type(8) {
+        grid-column: span 1;
+    }
+
+    .agent-profile-form > div:nth-of-type(9),
+    .agent-profile-form > div:nth-of-type(10),
+    .agent-profile-form > div:nth-of-type(11) {
+        grid-column: 1 / -1;
+    }
+
+    .agent-profile-form button[type="submit"] {
+        grid-column: 1 / -1;
+    }
+
+}
+
+
+/* =========================================
+   MOBILE PROFILE FORM
+========================================= */
+
+@media (max-width: 699px) {
+
+    .agent-profile-form {
+        display: flex;
+        flex-direction: column;
+    }
+
+}
+
+/* =========================================
+   AGENT ACCOUNT PROFILE DISPLAY
+========================================= */
+
+#agentProfileDetails {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 50px;
+    row-gap: 0;
+    line-height: 1.5;
+}
+
+#agentProfileDetails > div {
+    padding: 14px 0;
+    background: transparent;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.18);
+}
+
+#agentProfileDetails strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.65;
+}
+
+#agentProfileDetails > div {
+    font-size: 15px;
+}
+
+/* =========================================
+   SPACE BETWEEN PROFILE AND BANK DETAILS
+========================================= */
+
+#agentAccountPage .content-card + .content-card {
+    margin-top: 35px;
+}
+
+
+/* =========================================
+   MOBILE PROFILE
+========================================= */
+
+@media (max-width: 699px) {
+
+    #agentProfileDetails {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+    }
+
+}

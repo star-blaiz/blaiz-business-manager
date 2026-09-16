@@ -24,6 +24,8 @@ const agentNotificationRoutes =
     require("./routes/agentNotificationRoutes");
   const agentStatusRoutes =
     require("./routes/agentStatusRoutes");
+const agentSupportRoutes =
+    require("./routes/agentSupportRoutes");
 
 const app = express();
 
@@ -96,6 +98,10 @@ app.use(
 app.use(
     "/api/agents",
     agentStatusRoutes
+);
+app.use(
+    "/api/agent-support",
+    agentSupportRoutes
 );
 
 const startServer = async () => {

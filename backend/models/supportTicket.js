@@ -12,16 +12,30 @@ const supportTicketSchema =
             },
 
             storeId: {
-                type: mongoose.Schema.Types.ObjectId,
-                required: true,
-                index: true
-            },
+    type: mongoose.Schema.Types.ObjectId,
+    default: null,
+    index: true
+},
 
-            ownerId: {
-                type: mongoose.Schema.Types.ObjectId,
-                required: true,
-                index: true
-            },
+ownerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: null,
+    index: true
+},
+
+agentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Agent",
+    default: null,
+    index: true
+},
+
+requesterType: {
+    type: String,
+    enum: ["store", "agent"],
+    default: "store",
+    index: true
+},
 
             subject: {
                 type: String,
@@ -43,6 +57,8 @@ const supportTicketSchema =
                     "receipts",
                     "premium",
                     "payments",
+                    "referrals",
+                    "earnings",
                     "technical",
                     "other"
                 ]
@@ -108,6 +124,12 @@ supportTicketSchema.index({
 
 supportTicketSchema.index({
     ownerId: 1,
+    status: 1,
+    lastMessageAt: -1
+});
+
+supportTicketSchema.index({
+    agentId: 1,
     status: 1,
     lastMessageAt: -1
 });
