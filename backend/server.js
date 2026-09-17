@@ -88,6 +88,26 @@ app.get("/delete-account", (req, res) => {
   );
 });
 
+app.get("/privacy.html", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../frontend",
+      "privacy.html"
+    )
+  );
+});
+
+app.get("/terms.html", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "../frontend",
+      "terms.html"
+    )
+  );
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/stores", storeRoutes);
 app.use("/api/workers", workerRoutes);
