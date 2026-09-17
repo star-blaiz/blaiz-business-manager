@@ -904,6 +904,8 @@ function startAgentSuspensionCheck() {
 /* =========================================
    START AGENT NOTIFICATION CHECK
 ========================================= */
+let lastShownAgentNotificationId =
+    null;
 
 let agentNotificationCheckInterval =
     null;
@@ -921,7 +923,7 @@ function startAgentNotificationCheck() {
 
             await loadAgentNotificationUnreadCount();
             await checkForNewAgentNotification();
-
+            await loadAgentNotifications(true);
         },
         3000
     );
@@ -951,6 +953,7 @@ function startAgentNotificationCheck() {
 
                 await loadAgentNotificationUnreadCount();
                 await checkForNewAgentNotification();
+                await loadAgentNotifications(true);
 
             },
             10000
@@ -1002,15 +1005,30 @@ async function checkForNewAgentNotification() {
             notifications[0];
 
         if (
-            latestNotification &&
-            !latestNotification.isRead
-        ) {
+    latestNotification &&
+    !latestNotification.isRead
+) {
 
-            showAgentNotificationPopup(
-                latestNotification
-            );
+    const notificationId =
+        latestNotification._id ||
+        latestNotification.id;
 
-        }
+    if (
+        notificationId &&
+        notificationId !==
+            lastShownAgentNotificationId
+    ) {
+
+        lastShownAgentNotificationId =
+            notificationId;
+
+        showAgentNotificationPopup(
+            latestNotification
+        );
+
+    }
+
+}
 
     } catch (error) {
 
@@ -2851,6 +2869,267 @@ function setupAgentNavigation() {
     }
 }
 
+/* =========================
+   AGENT SETTINGS
+========================= */
+
+const agentResetPasswordForm =
+    document.getElementById(
+        "agentResetPasswordForm"
+    );
+
+const agentDeactivateAccountBtn =
+    document.getElementById(
+        "agentDeactivateAccountBtn"
+    );
+
+
+/* =========================
+   RESET PASSWORD
+========================= */
+
+if (
+    agentResetPasswordForm &&
+    !agentResetPasswordForm.dataset.listenerAttached
+) {
+
+    agentResetPasswordForm.addEventListener(
+        "submit",
+        async (event) => {
+
+            event.preventDefault();
+
+
+            const currentPassword =
+                document.getElementById(
+                    "agentCurrentPassword"
+                ).value;
+
+            const newPassword =
+                document.getElementById(
+                    "agentNewPassword"
+                ).value;
+
+            const confirmPassword =
+                document.getElementById(
+                    "agentConfirmPassword"
+                ).value;
+
+
+            if (
+                newPassword.length < 8
+            ) {
+
+                alert(
+                    "New password must be at least 8 characters long."
+                );
+
+                return;
+
+            }
+
+
+            if (
+                newPassword !==
+                confirmPassword
+            ) {
+
+                alert(
+                    "New passwords do not match."
+                );
+
+                return;
+
+            }
+
+
+            const button =
+                document.getElementById(
+                    "agentResetPasswordBtn"
+                );
+
+
+            if (button) {
+
+                button.disabled = true;
+
+                button.textContent =
+                    "Resetting...";
+
+            }
+
+
+            try {
+
+                const result =
+                    await apiRequest(
+                        "/agents/settings/password",
+                        {
+                            method: "PUT",
+
+                            body: JSON.stringify({
+
+                                currentPassword:
+                                    currentPassword,
+
+                                newPassword:
+                                    newPassword,
+
+                                confirmPassword:
+                                    confirmPassword
+
+                            })
+                        }
+                    );
+
+
+                alert(
+                    result.message ||
+                    "Password reset successfully. Please log in again."
+                );
+
+
+                agentResetPasswordForm.reset();
+
+
+                /*
+                 * The password has changed.
+                 * Log the Agent out so the old
+                 * authenticated session cannot
+                 * continue being used.
+                 */
+
+                localStorage.removeItem(
+    "blaiz_token"
+);
+
+                window.location.reload();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Agent Password Reset Error:",
+                    error
+                );
+
+
+                alert(
+                    error.message ||
+                    "Failed to reset password."
+                );
+
+            } finally {
+
+                if (button) {
+
+                    button.disabled = false;
+
+                    button.textContent =
+                        "Reset Password";
+
+                }
+
+            }
+
+        }
+    );
+
+
+    agentResetPasswordForm.dataset.listenerAttached =
+        "true";
+
+}
+
+
+/* =========================
+   DEACTIVATE ACCOUNT
+========================= */
+
+if (
+    agentDeactivateAccountBtn &&
+    !agentDeactivateAccountBtn.dataset.listenerAttached
+) {
+
+    agentDeactivateAccountBtn.addEventListener(
+        "click",
+        async () => {
+
+            const confirmed =
+                confirm(
+                    "Are you sure you want to deactivate your Agent account?\n\nYou will be logged out and will no longer be able to access your Agent dashboard until Blaiz Administration restores the account."
+                );
+
+
+            if (!confirmed) {
+
+                return;
+
+            }
+
+
+            agentDeactivateAccountBtn.disabled =
+                true;
+
+            agentDeactivateAccountBtn.textContent =
+                "Deactivating...";
+
+
+            try {
+
+                const result =
+                    await apiRequest(
+                        "/agents/settings/deactivate",
+                        {
+                            method: "PUT"
+                        }
+                    );
+
+
+                alert(
+                    result.message ||
+                    "Agent account deactivated successfully."
+                );
+
+
+                localStorage.removeItem(
+    "blaiz_token"
+);
+
+
+                window.location.reload();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Agent Account Deactivation Error:",
+                    error
+                );
+
+
+                alert(
+                    error.message ||
+                    "Failed to deactivate Agent account."
+                );
+
+
+                agentDeactivateAccountBtn.disabled =
+                    false;
+
+                agentDeactivateAccountBtn.textContent =
+                    "Deactivate Account";
+
+            }
+
+        }
+    );
+
+
+    agentDeactivateAccountBtn.dataset.listenerAttached =
+        "true";
+
+}
 
 /* =========================
    AGENT PAGE
@@ -3330,7 +3609,9 @@ function showAgentNotificationPopup(
    LOAD AGENT NOTIFICATIONS
 ========================================= */
 
-async function loadAgentNotifications() {
+async function loadAgentNotifications(
+    silent = false
+) {
 
     const notificationsList =
         document.getElementById(
@@ -3341,11 +3622,15 @@ async function loadAgentNotifications() {
         return;
     }
 
+    if (!silent) {
+
     notificationsList.innerHTML = `
         <div class="notification-empty">
             Loading notifications...
         </div>
     `;
+
+}
 
     try {
 
@@ -3397,7 +3682,13 @@ async function loadAgentNotifications() {
             unreadCount
         );
 
-        notificationsList.innerHTML =
+        const currentWindowScrollY =
+    window.scrollY;
+
+const currentListScrollTop =
+    notificationsList.scrollTop;
+    
+    notificationsList.innerHTML =
             notifications.map(
                 notification => {
 
@@ -3549,6 +3840,14 @@ async function loadAgentNotifications() {
                 }
             ).join("");
 
+            window.scrollTo(
+    0,
+    currentWindowScrollY
+);
+
+notificationsList.scrollTop =
+    currentListScrollTop;
+    
         /*
          * Attach click handlers after
          * notifications have been rendered.
@@ -5156,17 +5455,60 @@ if (
                 error
             );
 
+            const errorMessage =
+                error.message || "";
 
-            message.textContent =
-                error.message ||
-                "Unable to log in.";
+            if (
+                errorMessage.includes(
+                    "No internet connection"
+                )
+            ) {
 
+                message.textContent =
+                    "No internet connection. Please connect to the internet and try again.";
 
-            showNotification(
-                error.message ||
-                "Unable to log in."
-            );
+            } else if (
+                errorMessage.includes("Invalid")
+                ||
+                errorMessage.includes("invalid")
+                ||
+                errorMessage.includes("password")
+                ||
+                errorMessage.includes("credentials")
+            ) {
 
+                message.textContent =
+                    "The email/phone or password is incorrect. Please check your details and try again.";
+
+            } else if (
+                errorMessage.toLowerCase()
+                    .includes("suspended")
+            ) {
+
+                message.textContent =
+                    "Your account has been suspended. Please contact Blaiz Administration for assistance.";
+
+            } else if (
+                errorMessage.toLowerCase()
+                    .includes("inactive")
+            ) {
+
+                message.textContent =
+                    "Your account is currently inactive. Please contact Blaiz Administration for assistance.";
+
+            } else if (
+                errorMessage.toLowerCase()
+                    .includes("pending")
+            ) {
+
+                message.textContent =
+                    "Your account is still pending approval. Please wait for approval before logging in.";
+
+            } else {
+
+                message.textContent =
+                    "We couldn't log you in right now. Please check your details and try again.";
+            }
 
         } finally {
 
@@ -5313,12 +5655,52 @@ registerForm.addEventListener(
 
         } catch (error) {
 
-            message.textContent =
-                error.message;
-
-            showNotification(
-                error.message
+            console.error(
+                "Store registration error:",
+                error
             );
+
+            const errorMessage =
+                error.message || "";
+
+            if (
+                errorMessage.includes(
+                    "No internet connection"
+                )
+            ) {
+
+                message.textContent =
+                    "No internet connection. Please connect to the internet and try again.";
+
+            } else if (
+                errorMessage.toLowerCase()
+                    .includes("email")
+            ) {
+
+                message.textContent =
+                    "This email address may already be registered. Please use another email address.";
+
+            } else if (
+                errorMessage.toLowerCase()
+                    .includes("phone")
+            ) {
+
+                message.textContent =
+                    "This phone number may already be registered. Please use another phone number.";
+
+            } else if (
+                errorMessage.toLowerCase()
+                    .includes("referral")
+            ) {
+
+                message.textContent =
+                    "The referral code is not valid. Please check the code and try again.";
+
+            } else {
+
+                message.textContent =
+                    "We couldn't create your store account right now. Please check your information and try again.";
+            }
 
         } finally {
 
@@ -5732,10 +6114,47 @@ agentRegisterForm.addEventListener(
                 error
             );
 
+            const errorMessage =
+                error.message || "";
 
-            message.textContent =
-                error.message ||
-                "Unable to submit Agent application.";
+            if (
+                errorMessage.includes(
+                    "No internet connection"
+                )
+            ) {
+
+                message.textContent =
+                    "No internet connection. Please connect to the internet and try again.";
+
+            } else if (
+                errorMessage.toLowerCase()
+                    .includes("email")
+            ) {
+
+                message.textContent =
+                    "This email address may already be registered. Please check your email address and try again.";
+
+            } else if (
+                errorMessage.toLowerCase()
+                    .includes("phone")
+            ) {
+
+                message.textContent =
+                    "This phone number may already be registered. Please check your phone number and try again.";
+
+            } else if (
+                errorMessage.toLowerCase()
+                    .includes("nin")
+            ) {
+
+                message.textContent =
+                    "The NIN information could not be accepted. Please check your NIN and try again.";
+
+            } else {
+
+                message.textContent =
+                    "We couldn't submit your Agent application right now. Please check your information and try again.";
+            }
 
         } finally {
 
@@ -6674,6 +7093,45 @@ modalOverlay.addEventListener(
     closeModal
 );
 
+/* =========================
+   INLINE ERROR HELPERS
+========================= */
+
+function showInlineError(
+    element,
+    message
+) {
+
+    if (!element) {
+        return;
+    }
+
+    element.textContent =
+        message ||
+        "Something went wrong. Please try again.";
+
+    element.classList.add(
+        "error-message"
+    );
+
+}
+
+
+function clearInlineError(
+    element
+) {
+
+    if (!element) {
+        return;
+    }
+
+    element.textContent = "";
+
+    element.classList.remove(
+        "error-message"
+    );
+
+}
 
 /* =========================
    NOTIFICATIONS

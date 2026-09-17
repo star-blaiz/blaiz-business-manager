@@ -2081,12 +2081,22 @@
                 </span>
             </button>
 
+            <button
+    class="nav-item"
+    data-agent-page="settings"
+>
+    ⚙️
+    <span>
+        Settings
+    </span>
+</button>
+
 
             <button
                 class="nav-item"
                 data-agent-page="support"
             >
-                🛟
+                💬
                 <span>
                     Support
                 </span>
@@ -2703,6 +2713,179 @@
         >
 
             Loading bank details...
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- =========================================
+     AGENT SETTINGS PAGE
+========================================= -->
+
+<section
+    id="agentSettingsPage"
+    class="app-page"
+>
+
+    <div class="page-header">
+
+        <div>
+
+            <h1>
+                Settings
+            </h1>
+
+            <p>
+                Manage your Agent account security.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- RESET PASSWORD -->
+
+    <div class="content-card">
+
+        <div class="content-card-header">
+
+            <div>
+
+                <h3>
+                    Reset Password
+                </h3>
+
+                <p>
+                    Change your Agent account password.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <form
+            id="agentResetPasswordForm"
+            class="settings-form"
+        >
+
+            <div class="form-group">
+
+                <label
+                    for="agentCurrentPassword"
+                >
+                    Current Password
+                </label>
+
+                <input
+                    type="password"
+                    id="agentCurrentPassword"
+                    name="currentPassword"
+                    placeholder="Enter your current password"
+                    autocomplete="current-password"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label
+                    for="agentNewPassword"
+                >
+                    New Password
+                </label>
+
+                <input
+                    type="password"
+                    id="agentNewPassword"
+                    name="newPassword"
+                    placeholder="Enter your new password"
+                    autocomplete="new-password"
+                    minlength="8"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label
+                    for="agentConfirmPassword"
+                >
+                    Confirm New Password
+                </label>
+
+                <input
+                    type="password"
+                    id="agentConfirmPassword"
+                    name="confirmPassword"
+                    placeholder="Confirm your new password"
+                    autocomplete="new-password"
+                    minlength="8"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                id="agentResetPasswordBtn"
+                class="primary-btn"
+            >
+                Reset Password
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- DEACTIVATE ACCOUNT -->
+
+    <div class="content-card">
+
+        <div class="content-card-header">
+
+            <div>
+
+                <h3>
+                    Deactivate Account
+                </h3>
+
+                <p>
+                    Deactivate your Agent account and
+                    stop access to your Agent dashboard.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="settings-danger-area">
+
+            <p>
+                Once your account is deactivated,
+                you will no longer be able to log in
+                until the account is restored by
+                Blaiz Administration.
+            </p>
+
+
+            <button
+                type="button"
+                id="agentDeactivateAccountBtn"
+                class="danger-btn"
+            >
+                Deactivate Account
+            </button>
 
         </div>
 

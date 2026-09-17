@@ -14,6 +14,8 @@ const {
     getAgentAccount,
     updateAgentProfile,
     updateAgentBankDetails,
+    resetAgentPassword,
+    deactivateAgentAccount,
 } = require("../controllers/agentAccountController");
 
 const router = express.Router();
@@ -57,6 +59,22 @@ router.put(
     "/account/bank",
     protect,
     updateAgentBankDetails
+);
+
+/* =========================================
+   AGENT SETTINGS
+========================================= */
+
+router.put(
+    "/settings/password",
+    protect,
+    resetAgentPassword
+);
+
+router.put(
+    "/settings/deactivate",
+    protect,
+    deactivateAgentAccount
 );
 
 module.exports = router;

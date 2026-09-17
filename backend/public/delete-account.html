@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Delete Blaiz Business Manager Account
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #080808;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: #111111;
+            border: 1px solid #292929;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo h1 {
+            margin: 0;
+            font-size: 28px;
+            letter-spacing: 2px;
+        }
+
+        .logo span {
+            color: #d4af37;
+        }
+
+        h2 {
+            margin-top: 0;
+            text-align: center;
+        }
+
+        p {
+            color: #bdbdbd;
+            line-height: 1.6;
+        }
+
+        .warning {
+            background: #241818;
+            border: 1px solid #6b3030;
+            color: #f2b8b8;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            line-height: 1.5;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: 1px solid #333333;
+            background: #080808;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #d4af37;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 15px;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #d4af37;
+            color: #080808;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .error {
+            display: block;
+            background: #241818;
+            color: #ffb3b3;
+            border: 1px solid #6b3030;
+        }
+
+        .success {
+            display: block;
+            background: #172417;
+            color: #b9e6b9;
+            border: 1px solid #376137;
+        }
+
+        .danger-button {
+            background: #b3261e;
+            color: white;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 13px;
+            color: #777777;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="logo">
+            <h1>
+                BLAIZ <span>BUSINESS</span> MANAGER
+            </h1>
+        </div>
+
+        <h2>
+            Delete Your Account
+        </h2>
+
+        <p>
+            Use this page to request permanent deletion
+            of your Blaiz Business Manager Store Owner
+            account and associated store data.
+        </p>
+
+        <div class="warning">
+
+            <strong>
+                Important:
+            </strong>
+
+            Account deletion is permanent.
+
+            Your store, products, customers, sales,
+            receipts and associated worker accounts
+            will be permanently deleted.
+
+            This action cannot be undone.
+
+        </div>
+
+
+        <!-- STEP 1 -->
+
+        <div id="emailStep">
+
+            <label for="email">
+                Account Email
+            </label>
+
+            <input
+                type="email"
+                id="email"
+                placeholder="Enter your account email"
+                autocomplete="email"
+            >
+
+            <button
+                id="requestButton"
+                onclick="requestDeletion()"
+            >
+                Request Deletion Code
+            </button>
+
+            <div
+                id="emailMessage"
+                class="message"
+            ></div>
+
+        </div>
+
+
+        <!-- STEP 2 -->
+
+        <div
+            id="otpStep"
+            class="hidden"
+        >
+
+            <label for="otp">
+                Verification Code
+            </label>
+
+            <input
+                type="text"
+                id="otp"
+                placeholder="Enter 6-digit code"
+                inputmode="numeric"
+                maxlength="6"
+                autocomplete="one-time-code"
+            >
+
+            <button
+                id="verifyButton"
+                onclick="verifyDeletion()"
+            >
+                Verify Code
+            </button>
+
+            <div
+                id="otpMessage"
+                class="message"
+            ></div>
+
+        </div>
+
+
+        <!-- STEP 3 -->
+
+        <div
+            id="deleteStep"
+            class="hidden"
+        >
+
+            <div class="warning">
+
+                Your email has been verified.
+
+                If you continue, your Blaiz Business Manager
+                account and associated store data will be
+                permanently deleted.
+
+            </div>
+
+            <button
+                id="deleteButton"
+                class="danger-button"
+                onclick="deleteAccount()"
+            >
+                Permanently Delete My Account
+            </button>
+
+            <div
+                id="deleteMessage"
+                class="message"
+            ></div>
+
+        </div>
+
+
+        <div class="footer">
+            Blaiz Business Manager
+        </div>
+
+    </div>
+
+
+<script>
+
+const API_URL =
+    "https://blaiz-business-manager-gq8b.onrender.com/api";
+
+
+let accountEmail = "";
+
+
+/* =========================================
+   DISPLAY MESSAGE
+========================================= */
+
+function showMessage(
+    elementId,
+    message,
+    type
+) {
+
+    const element =
+        document.getElementById(
+            elementId
+        );
+
+    element.textContent =
+        message;
+
+    element.className =
+        "message " + type;
+}
+
+
+/* =========================================
+   REQUEST DELETION CODE
+========================================= */
+
+async function requestDeletion() {
+
+    const emailInput =
+        document.getElementById("email");
+
+    const button =
+        document.getElementById(
+            "requestButton"
+        );
+
+    const email =
+        emailInput.value
+            .trim()
+            .toLowerCase();
+
+    if (!email) {
+
+        showMessage(
+            "emailMessage",
+            "Please enter your account email address.",
+            "error"
+        );
+
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent =
+        "Sending...";
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/account-deletion/request`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        email
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Unable to process your request."
+            );
+        }
+
+        accountEmail = email;
+
+        showMessage(
+            "emailMessage",
+            data.message,
+            "success"
+        );
+
+        document
+            .getElementById("otpStep")
+            .classList.remove("hidden");
+
+        emailInput.disabled = true;
+
+    } catch (error) {
+
+        showMessage(
+            "emailMessage",
+            error.message ||
+            "Unable to process your request. Please try again.",
+            "error"
+        );
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent =
+            "Request Deletion Code";
+
+    }
+}
+
+
+/* =========================================
+   VERIFY CODE
+========================================= */
+
+async function verifyDeletion() {
+
+    const otpInput =
+        document.getElementById("otp");
+
+    const button =
+        document.getElementById(
+            "verifyButton"
+        );
+
+    const otp =
+        otpInput.value.trim();
+
+    if (!otp) {
+
+        showMessage(
+            "otpMessage",
+            "Please enter the verification code sent to your email.",
+            "error"
+        );
+
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent =
+        "Verifying...";
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/account-deletion/verify`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        email:
+                            accountEmail,
+                        otp
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Unable to verify the code."
+            );
+        }
+
+        showMessage(
+            "otpMessage",
+            data.message,
+            "success"
+        );
+
+        document
+            .getElementById("deleteStep")
+            .classList.remove("hidden");
+
+        otpInput.disabled = true;
+
+    } catch (error) {
+
+        showMessage(
+            "otpMessage",
+            error.message ||
+            "Unable to verify the code. Please try again.",
+            "error"
+        );
+
+    } finally {
+
+        button.disabled = false;
+        button.textContent =
+            "Verify Code";
+
+    }
+}
+
+
+/* =========================================
+   PERMANENTLY DELETE ACCOUNT
+========================================= */
+
+async function deleteAccount() {
+
+    const confirmed =
+        window.confirm(
+            "Are you sure you want to permanently delete your Blaiz Business Manager account and all associated store data? This action cannot be undone."
+        );
+
+    if (!confirmed) {
+        return;
+    }
+
+    const button =
+        document.getElementById(
+            "deleteButton"
+        );
+
+    button.disabled = true;
+    button.textContent =
+        "Deleting...";
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/account-deletion/delete`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        email:
+                            accountEmail
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Unable to delete your account."
+            );
+        }
+
+        showMessage(
+            "deleteMessage",
+            data.message,
+            "success"
+        );
+
+        button.style.display =
+            "none";
+
+    } catch (error) {
+
+        showMessage(
+            "deleteMessage",
+            error.message ||
+            "Unable to delete your account. Please try again later.",
+            "error"
+        );
+
+        button.disabled = false;
+        button.textContent =
+            "Permanently Delete My Account";
+
+    }
+}
+
+</script>
+
+</body>
+
+</html>

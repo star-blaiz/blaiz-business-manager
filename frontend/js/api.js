@@ -20,13 +20,29 @@ async function apiRequest(
             `Bearer ${token}`;
     }
 
-    const response = await fetch(
+    let response;
+
+try {
+
+    response = await fetch(
         `${API_URL}${endpoint}`,
         {
             ...options,
             headers
         }
     );
+
+} catch (error) {
+
+    console.error(
+        "API Network Error:",
+        error
+    );
+
+    throw new Error(
+        "No internet connection. Please connect to the internet and try again."
+    );
+}
 
     let data;
 

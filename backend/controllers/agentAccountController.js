@@ -1,3 +1,4 @@
+const bcrypt = require("bcryptjs");
 const Agent = require("../models/agent");
 
 
@@ -570,6 +571,258 @@ const updateAgentBankDetails = async (
 
 };
 
+/* =========================
+   RESET AGENT PASSWORD
+========================= */
+
+const resetAgentPassword = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const agent =
+            await Agent.findById(
+                req.agent._id
+            );
+
+        if (!agent) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Agent account not found."
+
+            });
+
+        }
+
+        const {
+            currentPassword,
+            newPassword,
+            confirmPassword
+        } = req.body;
+
+
+        if (
+            !currentPassword ||
+            !newPassword ||
+            !confirmPassword
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Please fill in all password fields."
+
+            });
+
+        }
+
+
+        if (
+            newPassword.length < 8
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "New password must be at least 8 characters long."
+
+            });
+
+        }
+
+
+        if (
+            newPassword !==
+            confirmPassword
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "New passwords do not match."
+
+            });
+
+        }
+
+
+        const passwordMatches =
+            await bcrypt.compare(
+                currentPassword,
+                agent.passwordHash
+            );
+
+
+        if (!passwordMatches) {
+
+            return res.status(401).json({
+
+                success: false,
+
+                message:
+                    "Current password is incorrect."
+
+            });
+
+        }
+
+
+        const samePassword =
+            await bcrypt.compare(
+                newPassword,
+                agent.passwordHash
+            );
+
+
+        if (samePassword) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "New password must be different from your current password."
+
+            });
+
+        }
+
+
+        agent.passwordHash =
+            await bcrypt.hash(
+                newPassword,
+                12
+            );
+
+
+        await agent.save();
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            message:
+                "Password reset successfully. Please log in again with your new password."
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Reset Agent Password Error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Failed to reset password."
+
+        });
+
+    }
+
+};
+
+
+/* =========================
+   DEACTIVATE AGENT ACCOUNT
+========================= */
+
+const deactivateAgentAccount = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const agent =
+            await Agent.findById(
+                req.agent._id
+            );
+
+        if (!agent) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Agent account not found."
+
+            });
+
+        }
+
+
+        if (
+            agent.status ===
+            "inactive"
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "This Agent account is already inactive."
+
+            });
+
+        }
+
+
+        agent.status =
+            "inactive";
+
+
+        await agent.save();
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            message:
+                "Agent account deactivated successfully."
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Deactivate Agent Account Error:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                "Failed to deactivate Agent account."
+
+        });
+
+    }
+
+};
+
 
 module.exports = {
 
@@ -577,6 +830,10 @@ module.exports = {
 
     updateAgentProfile,
 
-    updateAgentBankDetails
+    updateAgentBankDetails,
+
+    resetAgentPassword,
+
+    deactivateAgentAccount
 
 };

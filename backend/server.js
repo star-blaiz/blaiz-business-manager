@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const connectDatabase = require("./config/database");
 
@@ -26,6 +27,8 @@ const agentNotificationRoutes =
     require("./routes/agentStatusRoutes");
 const agentSupportRoutes =
     require("./routes/agentSupportRoutes");
+const accountDeletionRoutes =
+  require("./routes/accountDeletionRoutes");
 
 const app = express();
 
@@ -75,6 +78,16 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/delete-account", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "public",
+      "delete-account.html"
+    )
+  );
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/stores", storeRoutes);
 app.use("/api/workers", workerRoutes);
@@ -102,6 +115,11 @@ app.use(
 app.use(
     "/api/agent-support",
     agentSupportRoutes
+);
+
+app.use(
+  "/api/account-deletion",
+  accountDeletionRoutes
 );
 
 const startServer = async () => {
