@@ -3846,6 +3846,13 @@ async function loadAgentEarnings() {
                 dashboard.premiumStoresCount || 0
             );
 
+        const commissionHistory =
+    Array.isArray(
+        dashboard.commissionHistory
+    )
+        ? dashboard.commissionHistory
+        : [];
+
 
         earningsContent.innerHTML = `
 
@@ -3985,19 +3992,156 @@ async function loadAgentEarnings() {
 
 
             <div
-                style="
-                    padding:15px;
-                    border-radius:10px;
-                    background:
-                        rgba(128,128,128,0.08);
-                    font-size:14px;
-                    line-height:1.6;
-                "
-            >
-                Commission details and payment history
-                will appear here once commission rules
-                are configured by Blaiz Administration.
-            </div>
+    style="
+        margin-top:20px;
+    "
+>
+
+    <h3
+        style="
+            margin:0 0 12px 0;
+            font-size:18px;
+        "
+    >
+        Commission History
+    </h3>
+
+    ${
+        commissionHistory.length === 0
+            ? `
+                <div
+                    class="notification-empty"
+                >
+                    No commission history yet.
+                </div>
+            `
+            : commissionHistory.map(
+                (commission) => {
+
+                    const status =
+                        String(
+                            commission.status || ""
+                        );
+
+                    const source =
+                        String(
+                            commission.sourceType || ""
+                        )
+                        .replace(
+                            "_",
+                            " "
+                        );
+
+                    const plan =
+                        commission.plan ===
+                        "sixMonths"
+                            ? "Six Months"
+                            : commission.plan ===
+                              "yearly"
+                                ? "Yearly"
+                                : "Monthly";
+
+                    const date =
+                        commission.createdAt
+                            ? new Date(
+                                commission.createdAt
+                            ).toLocaleDateString()
+                            : "-";
+
+                    return `
+                        <div
+                            style="
+                                padding:15px;
+                                margin-bottom:12px;
+                                border-radius:12px;
+                                background:
+                                    rgba(128,128,128,0.08);
+                                border:
+                                    1px solid
+                                    rgba(128,128,128,0.15);
+                            "
+                        >
+
+                            <div
+                                style="
+                                    display:flex;
+                                    justify-content:space-between;
+                                    align-items:center;
+                                    gap:10px;
+                                    margin-bottom:10px;
+                                "
+                            >
+
+                                <strong
+                                    style="
+                                        text-transform:
+                                            capitalize;
+                                    "
+                                >
+                                    ${source}
+                                </strong>
+
+                                <span
+                                    style="
+                                        font-size:12px;
+                                        font-weight:600;
+                                        text-transform:
+                                            capitalize;
+                                    "
+                                >
+                                    ${status}
+                                </span>
+
+                            </div>
+
+                            <div
+                                style="
+                                    font-size:13px;
+                                    line-height:1.8;
+                                "
+                            >
+
+                                <div>
+                                    Plan:
+                                    <strong>
+                                        ${plan}
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    Payment:
+                                    <strong>
+                                        ₦${Number(
+                                            commission.paymentAmount ||
+                                            0
+                                        ).toLocaleString()}
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    Commission:
+                                    <strong>
+                                        ₦${Number(
+                                            commission.commissionAmount ||
+                                            0
+                                        ).toLocaleString()}
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    Date:
+                                    ${date}
+                                </div>
+
+                            </div>
+
+                        </div>
+                    `;
+                }
+            ).join("")
+    }
+
+</div>
 
         `;
 
@@ -6437,6 +6581,46 @@ logoutBtn.addEventListener(
     }
 );
 
+/* =========================
+   AGENT LOGOUT
+========================= */
+
+const agentLogoutBtn =
+    document.getElementById(
+        "agentLogoutBtn"
+    );
+
+if (agentLogoutBtn) {
+
+    agentLogoutBtn.addEventListener(
+        "click",
+        () => {
+
+            const confirmed =
+                confirm(
+                    "Are you sure you want to logout?"
+                );
+
+            if (!confirmed) {
+                return;
+            }
+
+            logoutUser();
+
+            showNotification(
+                "Logged out successfully."
+            );
+
+            setTimeout(
+                () => {
+                    location.reload();
+                },
+                400
+            );
+        }
+    );
+
+}
 
 /* =========================
    MOBILE MENU

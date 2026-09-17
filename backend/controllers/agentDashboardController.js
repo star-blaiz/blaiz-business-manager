@@ -1,5 +1,7 @@
 const Agent = require("../models/agent");
 const Store = require("../models/store");
+const Commission =
+  require("../models/commission");
 
 /* =========================================
    GET AGENT DASHBOARD
@@ -51,16 +53,48 @@ const getAgentDashboard = async (req, res) => {
       ).length;
 
 
-    /* =========================================
-       COMMISSION VALUES
+   /* =========================================
+   COMMISSION VALUES
+========================================= */
 
-       Commission rules will be handled
-       later through Blaiz Admin.
-    ========================================= */
+const commissions =
+  await Commission.find({
+    agentId: agent._id,
+  })
+  .sort({
+    createdAt: -1,
+  });
 
-    const totalEarnings = 0;
+const totalEarnings =
+  commissions
+    .filter(
+      (commission) =>
+        commission.status === "paid"
+    )
+    .reduce(
+      (total, commission) =>
+        total +
+        Number(
+          commission.commissionAmount || 0
+        ),
+      0
+    );
 
-    const pendingCommission = 0;
+const pendingCommission =
+  commissions
+    .filter(
+      (commission) =>
+        commission.status === "pending" ||
+        commission.status === "approved"
+    )
+    .reduce(
+      (total, commission) =>
+        total +
+        Number(
+          commission.commissionAmount || 0
+        ),
+      0
+    );
 
 
     /* =========================================
@@ -108,7 +142,41 @@ const getAgentDashboard = async (req, res) => {
 
         recentStores,
 
-      },
+        commissionHistory:
+      commissions.map(
+        (commission) => ({
+          id:
+            commission._id,
+
+          sourceType:
+            commission.sourceType,
+
+          plan:
+            commission.plan,
+
+          paymentAmount:
+            commission.paymentAmount,
+
+          commissionAmount:
+            commission.commissionAmount,
+
+          status:
+            commission.status,
+
+          withholdingReason:
+            commission.withholdingReason,
+
+          paymentReference:
+            commission.paymentReference,
+
+          createdAt:
+            commission.createdAt,
+
+          paidAt:
+            commission.paidAt,
+        })
+      ),
+},
 
     });
 
