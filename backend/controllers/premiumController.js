@@ -6,6 +6,9 @@ const Subscription = require("../models/subscription");
 const {
   notifyStoreUsers,
 } = require("../services/notificationService");
+const {
+  createAgentNotification,
+} = require("./agentNotificationController");
 
 const PREMIUM_PRICE = 30000;
 const PREMIUM_DURATION_DAYS = 365;
@@ -211,6 +214,57 @@ try {
   );
 }
 
+/* =====================================================
+   AGENT PREMIUM UPGRADE NOTIFICATION
+===================================================== */
+
+if (store.agentId) {
+
+  try {
+
+    await createAgentNotification({
+      agentId:
+        store.agentId,
+
+      category:
+        "premium",
+
+      type:
+        "store_premium_upgraded",
+
+      title:
+        "Store Premium Upgrade",
+
+      message:
+        `A store you referred has upgraded to Premium. Commission processing has been triggered.`,
+
+      relatedId:
+        store._id,
+
+      reference:
+        paymentReference,
+
+      showToast:
+        true,
+
+      requiresAction:
+        false,
+
+      actionType:
+        "view_store",
+    });
+
+  } catch (agentNotificationError) {
+
+    console.error(
+      "Agent Premium upgrade notification error:",
+      agentNotificationError
+    );
+
+  }
+
+}
+
 return {
   alreadyProcessed: false,
   subscription,
@@ -367,6 +421,62 @@ try {
     "Premium plan activation notification error:",
     notificationError
   );
+}
+
+/* =====================================================
+   AGENT PREMIUM PLAN UPGRADE NOTIFICATION
+===================================================== */
+
+if (store.agentId) {
+
+  try {
+
+    const agentPlanName =
+      plan === "monthly"
+        ? "Monthly Premium"
+        : "Six-Month Premium";
+
+    await createAgentNotification({
+      agentId:
+        store.agentId,
+
+      category:
+        "premium",
+
+      type:
+        "store_premium_upgraded",
+
+      title:
+        "Store Premium Upgrade",
+
+      message:
+        `${agentPlanName} has been activated for a store you referred. Commission processing has been triggered.`,
+
+      relatedId:
+        store._id,
+
+      reference:
+        paymentReference,
+
+      showToast:
+        true,
+
+      requiresAction:
+        false,
+
+      actionType:
+        "view_store",
+    });
+
+  } catch (agentNotificationError) {
+
+    console.error(
+      "Agent Premium upgrade notification error:",
+      agentNotificationError
+    );
+
+  }
+
 }
 
 return {
@@ -2773,6 +2883,70 @@ if (
         notificationError
 
       );
+
+    }
+
+        /* =====================================================
+       AGENT PREMIUM EXPIRY NOTIFICATION
+    ===================================================== */
+
+    if (store.agentId) {
+
+      try {
+
+        const agentPlanName =
+          subscription.plan === "monthly"
+            ? "Monthly Premium"
+            : subscription.plan === "six-month"
+            ? "Six-Month Premium"
+            : "Annual Premium";
+
+
+        await createAgentNotification({
+
+          agentId:
+            store.agentId,
+
+          category:
+            "premium",
+
+          type:
+            "store_premium_expired",
+
+          title:
+            "Referred Store Subscription Expired",
+
+          message:
+            `${agentPlanName} for a store you referred has expired. The store has been returned to the Free plan.`,
+
+          relatedId:
+            store._id,
+
+          reference:
+            subscription.paymentReference,
+
+          showToast:
+            true,
+
+          requiresAction:
+            false,
+
+          actionType:
+            "view_store",
+
+        });
+
+      } catch (agentNotificationError) {
+
+        console.error(
+
+          "Agent Premium expiry notification error:",
+
+          agentNotificationError
+
+        );
+
+      }
 
     }
 
