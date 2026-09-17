@@ -2883,6 +2883,11 @@ const agentDeactivateAccountBtn =
         "agentDeactivateAccountBtn"
     );
 
+const agentDeleteAccountBtn =
+    document.getElementById(
+        "agentDeleteAccountBtn"
+    );
+
 
 /* =========================
    RESET PASSWORD
@@ -3127,6 +3132,140 @@ if (
 
 
     agentDeactivateAccountBtn.dataset.listenerAttached =
+        "true";
+
+}
+
+/* =========================
+   PERMANENTLY DELETE ACCOUNT
+========================= */
+
+if (
+    agentDeleteAccountBtn &&
+    !agentDeleteAccountBtn.dataset.listenerAttached
+) {
+
+    agentDeleteAccountBtn.addEventListener(
+        "click",
+        async () => {
+
+            const confirmed =
+                confirm(
+                    "WARNING: This will permanently delete your Agent account.\n\nYour referred stores and commission/payment history will be preserved, but your personal account information will be removed or anonymized.\n\nThis action cannot be undone.\n\nDo you want to continue?"
+                );
+
+
+            if (!confirmed) {
+
+                return;
+
+            }
+
+
+            const password =
+                prompt(
+                    "Enter your current Agent account password to permanently delete your account:"
+                );
+
+
+            if (
+                password === null
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                !password.trim()
+            ) {
+
+                alert(
+                    "Please enter your current password."
+                );
+
+                return;
+
+            }
+
+
+            const finalConfirmation =
+                confirm(
+                    "Final confirmation:\n\nPermanently delete this Agent account?"
+                );
+
+
+            if (!finalConfirmation) {
+
+                return;
+
+            }
+
+
+            agentDeleteAccountBtn.disabled =
+                true;
+
+            agentDeleteAccountBtn.textContent =
+                "Deleting...";
+
+
+            try {
+
+                const result =
+                    await apiRequest(
+                        "/agents/settings/delete",
+                        {
+                            method: "DELETE",
+                            body: JSON.stringify({
+                                password:
+                                    password
+                            })
+                        }
+                    );
+
+
+                alert(
+                    result.message ||
+                    "Your Agent account has been permanently deleted."
+                );
+
+
+                localStorage.removeItem(
+                    "blaiz_token"
+                );
+
+
+                window.location.reload();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Agent Account Deletion Error:",
+                    error
+                );
+
+
+                alert(
+                    error.message ||
+                    "Failed to permanently delete Agent account."
+                );
+
+
+                agentDeleteAccountBtn.disabled =
+                    false;
+
+                agentDeleteAccountBtn.textContent =
+                    "Permanently Delete Account";
+
+            }
+
+        }
+    );
+
+
+    agentDeleteAccountBtn.dataset.listenerAttached =
         "true";
 
 }

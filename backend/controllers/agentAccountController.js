@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const Agent = require("../models/agent");
 
 
@@ -823,6 +824,162 @@ const deactivateAgentAccount = async (
 
 };
 
+/* =========================
+   PERMANENTLY DELETE AGENT ACCOUNT
+========================= */
+
+const deleteAgentAccount = async (req, res) => {
+    try {
+
+        const agent =
+            await Agent.findById(
+                req.agent._id
+            );
+
+        if (!agent) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Agent account not found."
+            });
+        }
+
+        if (
+            agent.status ===
+            "deleted"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "This Agent account has already been deleted."
+            });
+        }
+
+        const {
+            password
+        } = req.body;
+
+        if (
+            !password ||
+            !String(password).trim()
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Password is required to permanently delete your account."
+            });
+        }
+
+        const passwordMatches =
+            await bcrypt.compare(
+                password,
+                agent.passwordHash
+            );
+
+        if (!passwordMatches) {
+            return res.status(401).json({
+                success: false,
+                message:
+                    "Incorrect password."
+            });
+        }
+
+        /*
+         * Keep the Agent document and _id so
+         * historical Store and Commission
+         * records remain connected.
+         *
+         * Remove unnecessary personal,
+         * authentication and financial data.
+         *
+         * updateOne() is intentionally used
+         * instead of agent.save() because the
+         * registration fields are required for
+         * active Agents but are removed after
+         * permanent account deletion.
+         */
+
+        await Agent.updateOne(
+            {
+                _id: agent._id
+            },
+            {
+                $set: {
+                    fullName:
+                        "Deleted Agent",
+
+                    nameKnownToPeople:
+                        "Deleted Agent",
+
+                    applicationStatus:
+                        "rejected",
+
+                    rejectionReason:
+                        "Account permanently deleted by Agent.",
+
+                    reviewedAt:
+                        new Date(),
+
+                    status:
+                        "deleted",
+
+                    lastLogin:
+                        null,
+
+                    termsAccepted:
+                        false,
+
+                    termsAcceptedAt:
+                        null,
+
+                    termsVersion:
+                        null,
+
+                    privacyPolicyVersion:
+                        null
+                },
+
+                $unset: {
+                    nin: "",
+                    dateOfBirth: "",
+                    gender: "",
+                    relationshipStatus: "",
+                    phone: "",
+                    email: "",
+                    currentAddress: "",
+                    state: "",
+                    lga: "",
+                    homeAddress: "",
+                    passwordHash: "",
+                    referralCode: "",
+                    bankAccountName: "",
+                    bankAccountNumber: "",
+                    bankName: "",
+                    bankDetailsUpdatedAt: ""
+                }
+            }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "Your Agent account has been permanently deleted. Your referred stores and commission/payment history have been preserved."
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Delete Agent Account Error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Failed to permanently delete Agent account."
+        });
+    }
+};
 
 module.exports = {
 
@@ -834,6 +991,8 @@ module.exports = {
 
     resetAgentPassword,
 
-    deactivateAgentAccount
+    deactivateAgentAccount,
+
+    deleteAgentAccount
 
 };

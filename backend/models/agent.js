@@ -139,6 +139,7 @@ const agentSchema = new mongoose.Schema(
         "active",
         "suspended",
         "inactive",
+        "deleted",
       ],
       default: "pending",
     },
