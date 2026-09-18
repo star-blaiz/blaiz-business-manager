@@ -22,6 +22,12 @@ import {
     initializeAgentSupport
 } from "./agentSupport.js";
 
+
+const isBlaizAndroidApp =
+    window.Capacitor &&
+    window.Capacitor.isNativePlatform &&
+    window.Capacitor.isNativePlatform();
+
 /* =========================
    ANDROID PAYMENT DEEP LINK
 ========================= */
@@ -11854,25 +11860,31 @@ async function viewReceipt(
                 }
 
 
-               <button
-    type="button"
-    class="primary-btn"
-    onclick="window.blaizApp.printReceipt('${encodeURIComponent(
-        receipt.receiptNumber
-    )}')"
->
-    Print Receipt
-</button>
+               ${
+    !isBlaizAndroidApp
+        ? `
+            <button
+                type="button"
+                class="primary-btn"
+                onclick="window.blaizApp.printReceipt('${encodeURIComponent(
+                    receipt.receiptNumber
+                )}')"
+            >
+                Print Receipt
+            </button>
 
-<button
-    type="button"
-    class="primary-btn"
-    onclick="window.blaizApp.shareReceipt('${encodeURIComponent(
-        receipt.receiptNumber
-    )}')"
->
-    Share
-</button>
+            <button
+                type="button"
+                class="primary-btn"
+                onclick="window.blaizApp.shareReceipt('${encodeURIComponent(
+                    receipt.receiptNumber
+                )}')"
+            >
+                Share
+            </button>
+        `
+        : ""
+}
 
             </div>
 
@@ -12106,25 +12118,31 @@ function renderReceipts(receipts) {
                             </button>
 
 
-                            <button
-    type="button"
-    class="primary-btn"
-    onclick="window.blaizApp.printReceipt('${encodeURIComponent(
-        receipt.receiptNumber
-    )}')"
->
-    Print
-</button>
+${
+    !isBlaizAndroidApp
+        ? `
+            <button
+                type="button"
+                class="primary-btn"
+                onclick="window.blaizApp.printReceipt('${encodeURIComponent(
+                    receipt.receiptNumber
+                )}')"
+            >
+                Print
+            </button>
 
-<button
-    type="button"
-    class="primary-btn"
-    onclick="window.blaizApp.shareReceipt('${encodeURIComponent(
-        receipt.receiptNumber
-    )}')"
->
-    Share
-</button>
+            <button
+                type="button"
+                class="primary-btn"
+                onclick="window.blaizApp.shareReceipt('${encodeURIComponent(
+                    receipt.receiptNumber
+                )}')"
+            >
+                Share
+            </button>
+        `
+        : ""
+}
 
                         </div>
 
@@ -13023,41 +13041,232 @@ async function shareReceipt(receiptNumber) {
         `;
 
 
-        /*
-         * Native Android PDF generator.
-         */
+        /* =========================
+   SHARE RECEIPT AS IMAGE
+========================= */
 
-        const pdfGenerator =
-            window.Capacitor?.Plugins?.PdfGenerator;
+if (
+    !window.html2canvas
+) {
 
-        if (!pdfGenerator) {
+    await new Promise(
+        (resolve, reject) => {
 
-            throw new Error(
-                "PDF generator is not available in the Android app."
+            const script =
+                document.createElement(
+                    "script"
+                );
+
+            script.src =
+                "./js/libs/html2canvas.min.js";
+
+            script.onload =
+                resolve;
+
+            script.onerror =
+                () => reject(
+                    new Error(
+                        "Unable to load receipt image generator."
+                    )
+                );
+
+            document.head.appendChild(
+                script
             );
 
         }
+    );
+
+}
 
 
-        await pdfGenerator.fromData({
+/* =========================
+   CREATE RECEIPT ELEMENT
+========================= */
 
-            data:
-                receiptHtml,
+const receiptContainer =
+    document.createElement(
+        "div"
+    );
 
-            documentSize:
-                "58mm",
+receiptContainer.style.position =
+    "fixed";
 
-            orientation:
-                "portrait",
+receiptContainer.style.left =
+    "-10000px";
 
+receiptContainer.style.top =
+    "0";
+
+receiptContainer.style.width =
+    "58mm";
+
+receiptContainer.style.background =
+    "#ffffff";
+
+receiptContainer.innerHTML =
+    receiptHtml
+        .replace(
+            /<!DOCTYPE html>/i,
+            ""
+        )
+        .replace(
+            /<html[^>]*>/i,
+            ""
+        )
+        .replace(
+            /<\/html>/i,
+            ""
+        )
+        .replace(
+            /<head[\s\S]*?<\/head>/i,
+            ""
+        )
+        .replace(
+            /<body[^>]*>/i,
+            ""
+        )
+        .replace(
+            /<\/body>/i,
+            ""
+        );
+
+
+document.body.appendChild(
+    receiptContainer
+);
+
+
+/* =========================
+   GENERATE RECEIPT IMAGE
+========================= */
+
+const canvas =
+    await window.html2canvas(
+        receiptContainer,
+        {
+            backgroundColor:
+                "#ffffff",
+
+            scale: 2,
+
+            useCORS: true
+        }
+    );
+
+
+document.body.removeChild(
+    receiptContainer
+);
+
+
+/* =========================
+   CONVERT TO PNG FILE
+========================= */
+
+const blob =
+    await new Promise(
+        (resolve) => {
+
+            canvas.toBlob(
+                resolve,
+                "image/png"
+            );
+
+        }
+    );
+
+
+if (!blob) {
+
+    throw new Error(
+        "Unable to create receipt image."
+    );
+
+}
+
+
+const receiptFile =
+    new File(
+        [
+            blob
+        ],
+        `Receipt-${receiptNumber}.png`,
+        {
             type:
-                "share",
+                "image/png"
+        }
+    );
 
-            fileName:
-                `Receipt-${receiptNumber}.pdf`
 
-        });
+/* =========================
+   SHARE RECEIPT IMAGE
+========================= */
 
+if (
+    navigator.canShare &&
+    navigator.canShare({
+        files: [
+            receiptFile
+        ]
+    })
+) {
+
+    await navigator.share({
+
+        title:
+            `Receipt ${
+                receipt.receiptNumber ||
+                ""
+            }`,
+
+        files: [
+            receiptFile
+        ]
+
+    });
+
+} else {
+
+    /* =========================
+       FALLBACK DOWNLOAD
+    ========================= */
+
+    const imageUrl =
+        URL.createObjectURL(
+            blob
+        );
+
+    const downloadLink =
+        document.createElement(
+            "a"
+        );
+
+    downloadLink.href =
+        imageUrl;
+
+    downloadLink.download =
+        `Receipt-${receiptNumber}.png`;
+
+    document.body.appendChild(
+        downloadLink
+    );
+
+    downloadLink.click();
+
+    document.body.removeChild(
+        downloadLink
+    );
+
+    URL.revokeObjectURL(
+        imageUrl
+    );
+
+    showNotification(
+        "Receipt image downloaded. You can now share it."
+    );
+
+}
 
     } catch (error) {
 
@@ -13224,11 +13433,11 @@ async function printReceipt(receiptNumber) {
 
                     .receipt {
 
-                        max-width: 700px;
+    width: 58mm;
 
-                        margin: auto;
+    margin: 0 auto;
 
-                    }
+}
 
 
                     .header {
@@ -13384,20 +13593,33 @@ async function printReceipt(receiptNumber) {
 
                     @media print {
 
-                        body {
+    @page {
 
-                            padding: 10px;
+        size: 58mm auto;
 
-                        }
+        margin: 0;
 
+    }
 
-                        .receipt {
+    body {
 
-                            max-width: none;
+        width: 58mm;
 
-                        }
+        margin: 0;
 
-                    }
+        padding: 0;
+
+    }
+
+    .receipt {
+
+        width: 58mm;
+
+        margin: 0 auto;
+
+    }
+
+}
 
                 </style>
 
@@ -13699,82 +13921,35 @@ async function printReceipt(receiptNumber) {
         `;
 
 
-       /* =========================
-   ANDROID PDF / BROWSER PRINT
-========================= */
-
-const isAndroid =
-    /Android/i.test(navigator.userAgent);
-
-if (isAndroid) {
-
-    /*
-     * Use the native Capacitor PDF Generator.
-     *
-     * The native Android share sheet will then
-     * provide available apps such as WhatsApp,
-     * Bluetooth, Xender, Quick Share, Files, etc.
-     */
-
-    const pdfGenerator =
-        window.Capacitor?.Plugins?.PdfGenerator;
-
-    if (!pdfGenerator) {
-
-        throw new Error(
-            "Native PDF generator is not available."
-        );
-
-    }
-
-    await pdfGenerator.fromData({
-
-        data: receiptHtml,
-
-        documentSize: "58mm",
-
-        orientation: "portrait",
-
-        type: "share",
-
-        fileName:
-            `Receipt-${receiptNumber}.pdf`
-
-    });
-
-} else {
-
-    const printWindow =
-        window.open(
-            "",
-            "_blank"
-        );
-
-    if (!printWindow) {
-
-        throw new Error(
-            "Unable to open print window. Please allow pop-ups."
-        );
-
-    }
-
-    printWindow.document.open();
-
-    printWindow.document.write(
-        receiptHtml
+       const printWindow =
+    window.open(
+        "",
+        "_blank"
     );
 
-    printWindow.document.close();
+if (!printWindow) {
 
-    printWindow.focus();
-
-    setTimeout(() => {
-
-        printWindow.print();
-
-    }, 300);
+    throw new Error(
+        "Unable to open print window. Please allow pop-ups."
+    );
 
 }
+
+printWindow.document.open();
+
+printWindow.document.write(
+    receiptHtml
+);
+
+printWindow.document.close();
+
+printWindow.focus();
+
+setTimeout(() => {
+
+    printWindow.print();
+
+}, 300);
 
 
     } catch (error) {
