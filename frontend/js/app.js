@@ -1252,9 +1252,34 @@ if (returnedPremiumReference) {
 
 }
 
-        } else {
+                } else {
 
-            showAuthentication();
+            const referralFromUrl =
+                new URLSearchParams(
+                    window.location.search
+                ).get("ref");
+
+            if (referralFromUrl) {
+
+                showRegisterPage();
+
+                const referralInput =
+                    document.getElementById(
+                        "registerReferralCode"
+                    );
+
+                if (referralInput) {
+
+                    referralInput.value =
+                        referralFromUrl.trim();
+
+                }
+
+            } else {
+
+                showAuthentication();
+
+            }
 
         }
 
