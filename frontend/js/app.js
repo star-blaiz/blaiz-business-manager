@@ -1310,6 +1310,32 @@ function showRegisterPage() {
 }
 
 /* =========================
+   AUTO APPLY AGENT REFERRAL
+========================= */
+
+const referralFromUrl =
+    new URLSearchParams(
+        window.location.search
+    ).get("ref");
+
+if (referralFromUrl) {
+
+    const referralInput =
+        document.getElementById(
+            "registerReferralCode"
+        );
+
+    if (referralInput) {
+
+        referralInput.value =
+            referralFromUrl.trim();
+
+    }
+
+    showRegisterPage();
+}
+
+/* =========================
    APPLICATION DISPLAY
 ========================= */
 
