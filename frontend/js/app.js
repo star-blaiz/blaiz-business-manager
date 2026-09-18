@@ -1262,6 +1262,7 @@ if (returnedPremiumReference) {
             if (referralFromUrl) {
 
                 showRegisterPage();
+                showAuthentication();
 
                 const referralInput =
                     document.getElementById(
