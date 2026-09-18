@@ -1310,32 +1310,6 @@ function showRegisterPage() {
 }
 
 /* =========================
-   AUTO APPLY AGENT REFERRAL
-========================= */
-
-const referralFromUrl =
-    new URLSearchParams(
-        window.location.search
-    ).get("ref");
-
-if (referralFromUrl) {
-
-    const referralInput =
-        document.getElementById(
-            "registerReferralCode"
-        );
-
-    if (referralInput) {
-
-        referralInput.value =
-            referralFromUrl.trim();
-
-    }
-
-    showRegisterPage();
-}
-
-/* =========================
    APPLICATION DISPLAY
 ========================= */
 
@@ -1601,32 +1575,44 @@ async function loadAgentDashboard() {
         ========================================= */
 
         const referralLink =
-            document.getElementById(
-                "agentReferralLink"
+    document.getElementById(
+        "agentReferralLink"
+    );
+
+
+if (referralLink) {
+
+    const code =
+        dashboard.referralCode || "";
+
+    if (code) {
+
+        const baseUrl =
+            "https://blaizbusinessmanager.onrender.com";
+
+        const link =
+            `${baseUrl}/?ref=${encodeURIComponent(code)}`;
+
+        referralLink.textContent =
+            link;
+
+        referralLink.style.cursor =
+            "pointer";
+
+        referralLink.onclick = () => {
+            window.open(
+                link,
+                "_blank"
             );
+        };
 
+    } else {
 
-        if (referralLink) {
+        referralLink.textContent =
+            "Referral link unavailable.";
 
-            const code =
-                dashboard.referralCode || "";
-
-            if (code) {
-
-                const baseUrl =
-                    window.location.origin;
-
-                referralLink.value =
-                    `${baseUrl}/?ref=${encodeURIComponent(code)}`;
-
-            } else {
-
-                referralLink.value = "";
-
-            }
-
-        }
-
+    }
+}
 
         /* =========================================
            RECENT REFERRED STORES
