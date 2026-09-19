@@ -1994,3 +1994,44 @@ button {
 #agentSettingsPage .settings-danger-area p {
     margin-bottom: 22px;
 }
+
+/* =========================================
+   CONNECTION STATUS
+========================================= */
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.connection-status span:first-child {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+}
+
+/* ONLINE */
+.connection-status.online {
+    color: #15803d;
+}
+
+.connection-status.online span:first-child {
+    background: #22c55e;
+}
+
+/* OFFLINE */
+.connection-status.offline {
+    color: #dc2626;
+}
+
+.connection-status.offline span:first-child {
+    background: #dc2626;
+}

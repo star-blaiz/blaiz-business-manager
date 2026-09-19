@@ -1,3 +1,105 @@
+/* =========================================
+   CONNECTION STATUS
+========================================= */
+
+function updateConnectionStatus() {
+
+    const isOnline =
+        navigator.onLine;
+
+    const connectionStatus =
+        document.getElementById(
+            "connectionStatus"
+        );
+
+    const connectionStatusDot =
+        document.getElementById(
+            "connectionStatusDot"
+        );
+
+    const connectionStatusText =
+        document.getElementById(
+            "connectionStatusText"
+        );
+
+    const agentConnectionStatus =
+        document.getElementById(
+            "agentConnectionStatus"
+        );
+
+    const agentConnectionStatusDot =
+        document.getElementById(
+            "agentConnectionStatusDot"
+        );
+
+    const agentConnectionStatusText =
+        document.getElementById(
+            "agentConnectionStatusText"
+        );
+
+    const updateStatus =
+        (
+            status,
+            dot,
+            text
+        ) => {
+
+            if (!status || !dot || !text) {
+                return;
+            }
+
+            status.classList.remove(
+                "online",
+                "offline"
+            );
+
+            if (isOnline) {
+
+                status.classList.add(
+                    "online"
+                );
+
+                text.textContent =
+                    "Online";
+
+            } else {
+
+                status.classList.add(
+                    "offline"
+                );
+
+                text.textContent =
+                    "Offline";
+            }
+        };
+
+    updateStatus(
+        connectionStatus,
+        connectionStatusDot,
+        connectionStatusText
+    );
+
+    updateStatus(
+        agentConnectionStatus,
+        agentConnectionStatusDot,
+        agentConnectionStatusText
+    );
+}
+
+window.addEventListener(
+    "online",
+    updateConnectionStatus
+);
+
+window.addEventListener(
+    "offline",
+    updateConnectionStatus
+);
+
+document.addEventListener(
+    "DOMContentLoaded",
+    updateConnectionStatus
+);
 
 import {
     loginUser,
