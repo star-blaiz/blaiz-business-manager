@@ -3,11 +3,25 @@ const mongoose = require("mongoose");
 const passwordResetSchema = new mongoose.Schema(
   {
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      index: true,
-    },
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+  required: false,
+  index: true,
+},
+
+agentId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Agent",
+  required: false,
+  index: true,
+},
+
+accountType: {
+  type: String,
+  enum: ["user", "agent"],
+  default: "user",
+  required: true,
+},
 
     email: {
       type: String,

@@ -1212,36 +1212,45 @@ const forgotPassword = async (req, res) => {
 
 
     const user =
-      await User.findOne({
-        email: normalizedEmail,
-      });
+  await User.findOne({
+    email: normalizedEmail,
+  });
+
+const agent =
+  await Agent.findOne({
+    email: normalizedEmail,
+  });
+
+
+/*
+ * Do not reveal whether an email
+ * belongs to an account.
+ */
+
+if (!user && !agent) {
+
+  return res.status(200).json({
+    success: true,
+    message:
+      "If an account exists with that email, a password reset OTP has been sent.",
+  });
+
+}
+
+const accountType =
+  user
+    ? "user"
+    : "agent";
 
 
     /*
-     * Do not reveal whether an email
-     * belongs to an account.
-     */
+ * Remove any previous reset requests
+ * belonging to this account.
+ */
 
-    if (!user) {
-
-      return res.status(200).json({
-        success: true,
-        message:
-          "If an account exists with that email, a password reset OTP has been sent.",
-      });
-
-    }
-
-
-    /*
-     * Remove any previous reset requests
-     * belonging to this user.
-     */
-
-    await PasswordReset.deleteMany({
-      userId: user._id,
-    });
-
+await PasswordReset.deleteMany({
+  email: normalizedEmail,
+});
 
     /*
      * Generate a secure 6-digit OTP.
@@ -1277,23 +1286,32 @@ const forgotPassword = async (req, res) => {
 
     await PasswordReset.create({
 
-      userId:
-        user._id,
+  userId:
+    user
+      ? user._id
+      : undefined,
 
-      email:
-        normalizedEmail,
+  agentId:
+    agent
+      ? agent._id
+      : undefined,
 
-      otpHash,
+  accountType,
 
-      expiresAt,
+  email:
+    normalizedEmail,
 
-      attempts:
-        0,
+  otpHash,
 
-      verified:
-        false,
+  expiresAt,
 
-    });
+  attempts:
+    0,
+
+  verified:
+    false,
+
+});
 
 
     /*
@@ -1684,34 +1702,56 @@ const resetPassword = async (req, res) => {
 
 
     /*
-     * Find the account.
-     */
+ * Find the account.
+ */
 
-    const user =
-      await User.findOne({
+let user = null;
+let agent = null;
 
-        _id:
-          resetRequest.userId,
+if (
+  resetRequest.accountType ===
+  "agent"
+) {
 
-        email:
-          normalizedEmail,
+  agent =
+    await Agent.findOne({
 
-      });
+      _id:
+        resetRequest.agentId,
+
+      email:
+        normalizedEmail,
+
+    });
+
+} else {
+
+  user =
+    await User.findOne({
+
+      _id:
+        resetRequest.userId,
+
+      email:
+        normalizedEmail,
+
+    });
+
+}
 
 
-    if (!user) {
+if (!user && !agent) {
 
-      return res.status(404).json({
+  return res.status(404).json({
 
-        success: false,
+    success: false,
 
-        message:
-          "Account not found.",
+    message:
+      "Account not found.",
 
-      });
+  });
 
-    }
-
+}
 
     /*
      * Hash the new password.
@@ -1724,21 +1764,25 @@ const resetPassword = async (req, res) => {
       );
 
 
-    /*
-     * Update the password.
-     */
+   /*
+ * Update the password.
+ */
 
-    user.passwordHash =
-      passwordHash;
+if (agent) {
 
+  agent.passwordHash =
+    passwordHash;
 
-    /*
-     * Update the account login
-     * timestamp is NOT necessary here.
-     */
+  await agent.save();
 
-    await user.save();
+} else {
 
+  user.passwordHash =
+    passwordHash;
+
+  await user.save();
+
+}
 
     /*
      * Delete the reset request so
