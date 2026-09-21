@@ -113,7 +113,8 @@ import {
     getStore,
     saveStore,
     saveUser,
-    apiRequest
+    apiRequest,
+    clearSession
 } from "./api.js";
 
 import {
