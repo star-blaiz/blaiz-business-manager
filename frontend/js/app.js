@@ -5789,7 +5789,19 @@ if (
                 message.textContent =
                     "Your account is still pending approval. Please wait for approval before logging in.";
 
-            } else {
+            
+                        } else if (
+                errorMessage.toLowerCase()
+                    .includes("premium subscription")
+                ||
+                errorMessage.toLowerCase()
+                    .includes("subscription has expired")
+            ) {
+
+                message.textContent =
+                    "Your store's Premium subscription has expired. Please ask the store owner to renew the subscription before you can log in.";
+
+                } else {
 
                 message.textContent =
                     "We couldn't log you in right now. Please check your details and try again.";
