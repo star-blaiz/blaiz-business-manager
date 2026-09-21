@@ -891,7 +891,19 @@ function showAgentSuspension(details = {}) {
 
                 overlay.remove();
 
-                showAuthentication();
+const agentDashboard =
+    document.getElementById(
+        "agentDashboardContainer"
+    );
+
+if (agentDashboard) {
+
+    agentDashboard
+        .classList
+        .add("hidden");
+}
+
+showAuthentication();
             }
         );
     }
